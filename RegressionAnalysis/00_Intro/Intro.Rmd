@@ -1,0 +1,100 @@
+---
+title: "Intro"
+fontsize: 11pt
+geometry: margin=1in
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    fig_caption: true
+    df_print: kable
+    highlight: tango
+---
+
+```{r knitr-setup, include = FALSE}
+
+library(knitr)
+
+knitr::opts_chunk$set(eval = TRUE)
+
+```
+
+```{r, echo=FALSE}
+
+require(data.table, quietly = TRUE, warn.conflicts = FALSE)
+assignInNamespace("cedta.pkgEvalsUserCode", c(data.table:::cedta.pkgEvalsUserCode, "rtvs"), "data.table")
+
+require(dplyr, quietly = TRUE, warn.conflicts = FALSE)
+require(ggplot2, quietly = TRUE, warn.conflicts = FALSE)
+
+require(directlabels, quietly = TRUE, warn.conflicts = FALSE)
+
+mpg
+
+```
+
+# Intro 1
+
+>
+
+## Sub 1
+
+### Section 1
+
+```{r ch_3.3}
+
+df <- data.frame(x = 1, y = 3:1, family = c("sans", "serif", "mono"))
+
+ggplot(df, aes(x, y)) +
+    geom_text(aes(label = family, family = family))
+
+df <- data.frame(x = 1, y = 3:1, face = c("plain", "bold", "italic"))
+
+ggplot(df, aes(x, y)) +
+   geom_text(aes(label = face, fontface = face))
+
+df <- data.frame(x = c(1, 1, 2, 2, 1.5),
+                 y = c(1, 2, 1, 2, 1.5),
+                 text = c(
+                          "bottom-left", "bottom-right",
+                          "top-left", "top-right", "center"))
+```
+
+# Intro 2
+
+### Exercises 3.2.1
+
+> __Question 1__: 
+
+> What geoms would you use to draw each of the following named plots?
+
+> + `Scatterplot`
+> + `Line Chart`
+> + `Histogram`
+> + `Bar chart`
+> + `Pie Chart`
+
+> __Answer__:
+
+```{r ch_3.2.1_1}
+
+df <- data.frame(x = c(3, 1, 5),
+                 y = c(2, 4, 6),
+                 label = c("a", "b", "c"))
+
+p <- ggplot(df, aes(x, y, label = label)) +
+    labs(x = NULL, y = NULL) + # Hide axis label
+    theme(plot.title = element_text(size = 12))
+
+p + geom_point() + ggtitle("point")
+p + geom_text(label = "") + ggtitle("text")
+p + geom_bar(stat = "identity") + ggtitle("bar")
+p + geom_tile() + ggtitle("raster")
+
+p + geom_line() + ggtitle("line")
+p + geom_area() + ggtitle("area")
+p + geom_path() + ggtitle("path")
+p + geom_polygon() + ggtitle("polygon")
+
+```
