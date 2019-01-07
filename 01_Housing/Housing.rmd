@@ -1,0 +1,60 @@
+---
+title: "Housing"
+fontsize: 11pt
+geometry: margin=1in
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    fig_caption: true
+    df_print: kable
+    highlight: tango
+---
+
+```{r knitr-setup, include = FALSE}
+
+library(knitr)
+
+knitr::opts_chunk$set(eval = TRUE)
+
+```
+
+```{r, echo=FALSE}
+
+require(data.table, quietly = TRUE, warn.conflicts = FALSE)
+assignInNamespace("cedta.pkgEvalsUserCode", c(data.table:::cedta.pkgEvalsUserCode, "rtvs"), "data.table")
+
+require(dplyr, quietly = TRUE, warn.conflicts = FALSE)
+require(ggplot2, quietly = TRUE, warn.conflicts = FALSE)
+
+require(directlabels, quietly = TRUE, warn.conflicts = FALSE)
+
+```
+
+# Housing
+
+>
+
+## Sub 1
+
+### Section 1
+
+```{r ch_3.3}
+
+df <- data.frame(x = 1, y = 3:1, family = c("sans", "serif", "mono"))
+
+ggplot(df, aes(x, y)) +
+    geom_text(aes(label = family, family = family))
+
+df <- data.frame(x = 1, y = 3:1, face = c("plain", "bold", "italic"))
+
+ggplot(df, aes(x, y)) +
+   geom_text(aes(label = face, fontface = face))
+
+df <- data.frame(x = c(1, 1, 2, 2, 1.5),
+                 y = c(1, 2, 1, 2, 1.5),
+                 text = c(
+                          "bottom-left", "bottom-right",
+                          "top-left", "top-right", "center"))
+```
