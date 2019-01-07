@@ -8,3 +8,7 @@ tinytex:::is_tinytex()
 install.packages("devtools")
 library(devtools)
 install_version("rmarkdown", version = 1.8)
+
+install.packages("corrplot")
+install.packages("lattice")
+install.packages("scatterplot3d")
