@@ -1,6 +1,12 @@
 
+path.work <- "E:/GitHub/MSDS-RegressionAnalysis/data"
+path.home <- "D:/Projects/MSDS-RegressionAnalysis/data"
 
-setwd("E:/GitHub/MSDS-RegressionAnalysis/01_Housing")
+if(file.exists(path.home)) {
+  setwd(path.home)
+} else {
+  setwd(path.work)
+}
 
 ##################
 
@@ -55,9 +61,11 @@ ggplot(subdat, aes(x=QualityIndex)) +
   geom_histogram(color="black", binwidth= 10) +
   labs(title="Distribution of QualityIndex") +
   theme(plot.title=element_text(lineheight=0.8, face="bold", hjust=0.5))
+
 #######################################################################
 ########### bivariate EDA ########################################
 ###################################################################
+
 ggplot(subdat, aes(x=TotalFloorSF, y=QualityIndex)) + 
   geom_point(color="blue", shape=1) +
   ggtitle("Scatter Plot of Total Floor SF vs QualityIndex") +
@@ -129,7 +137,6 @@ ggplot(subdat2, aes(x=QualityIndex, y=SalePrice)) +
   ggtitle("Scatter Plot of Sale Price vs QualityIndex") +
   theme(plot.title=element_text(lineheight=0.8, face="bold", hjust=0.5)) +
   geom_smooth(method=lm)  ## method=lm, se=FALSE ###
-
 
 
 # 3D Scatterplot with Coloring and Vertical Lines
