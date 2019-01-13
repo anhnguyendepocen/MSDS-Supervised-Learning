@@ -22,24 +22,90 @@ loadDataFile <- function(file_name, sep = ',') {
   return(data)
 }
 
+# dataset
 repairs <- loadDataFile("ComputerRepair.txt", sep = '\t')
 
-y <- repairs$Units
-x <- repairs$Minutes
+y <- repairs$Minutes
+x <- repairs$Units
 
 x_hat <- mean(x)
 y_hat <- mean(y)
+n <- nrow(repairs)
 
-b1 <- sum((y - y_hat) * (x - x_hat)) / sum((y - y_hat) * (y - y_hat))
-b0 <- mean(x) - beta1 * mean(y)
+# long-hand calculation
+
+b1 <- sum((y - y_hat) * (x - x_hat)) / sum((x - x_hat) ** 2)
+b0 <- mean(y) - b1 * mean(x)
 plot(x, y)
 abline(b0, b1)
 
+residuals <- y - (b0 + (1:n * b1))
 
-fit <- lm(repairs$Units ~ repairs$Minutes)
+hist(residuals)
+
+var(residuals)
+sd(residuals)
+
+get_estimate <- function( n = 10, x = 4 ) {
+  (b0 + 1:x * b1)[n]
+}
+
+get_estimate(4) - y[4]
+
+sd(y) / sqrt(n)
+
+sse <- 
+se <- sqrt(sse)
+
+sum(residuals ^ 2)
+
+b0_se <- se * ( 1 / n ) + ( x_hat **2 ) / sum( ( x - x_hat ) ** 2 )
+b1_se <- se / sqrt( sum( ( x - x_hat ) ** 2) )
+
+# Linear Model
+
+fit <- lm(y ~ x)
 summary(fit)
 coeff = coefficients(fit)
 eq = paste0("y = ", round(coeff[2], 1), "*x ", round(coeff[1], 1))
 
 plot(x, y)
 abline(fit)
+
+# View summary of model
+summary(fit)
+
+# Compute the mean of the residuals
+mean(residuals(fit))
+
+# Compute RMSE
+sqrt(sum(residuals(fit) ^ 2) / df.residual(fit))
+
+cor(y, x)
+
+sd(x)
+
+sum((y - y_hat) ** 2)
+
+summary(fit)
+
+summary(lm(x ~ y))
+
+xvar <- rnorm(20, 10, 1)
+xvar
+
+mean(xvar)
+var(xvar)
+
+xvar2 <- 2 * xvar
+xvar2
+
+mean(xvar2)
+var(xvar2)
+
+xvar2P5 <- 2 * xvar + 5
+mean(xvar2P5)
+var(xvar2P5)
+
+
+
