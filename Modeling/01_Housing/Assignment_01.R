@@ -4,6 +4,7 @@ library(ggrepel)
 library(ggthemes)
 library(formattable)
 library(scales)
+library(reshape2)
 
 path.work <- "E:/GitHub/MSDS-RegressionAnalysis/data"
 path.home <- "D:/Projects/MSDS-RegressionAnalysis/data"
@@ -46,15 +47,9 @@ ggplot(data.housing) +
   geom_histogram(aes(data.housing$Price_Sqft, fill = ..count..), breaks = pretty(data.housing$Price_Sqft)) +
   labs(x = "Price / Sqft", y = "Count")
 
-str(subdat)
-
-subdatnum <- subset(data.housing, select = c("TotalFloorSF", "HouseAge", "QualityIndex",
-                                  "SalePrice", "LotArea", "OverallQual", "logSalePrice"))
-
 #####################################################################
 ######################### Assignment 1 ##############################
 #####################################################################
-
 
 # General EDA
 
@@ -78,13 +73,42 @@ str(building.info)
 
 # Model Data
 
-model.data <- subset(data.housing, select = c("TotalFloorSF", "HouseAge", "QualityIndex",
-                                  "Price_Sqft", "SalePrice", "LotArea",
-                                  "BsmtFinSF1", "Neighborhood", "HouseStyle",
-                                  "LotShape", "OverallQual", "logSalePrice",
-                                  "TotalBsmtSF", "HouseStyle", "BldgType"))
+data.model <- subset(data.housing, select = c("TotalFloorSF", "QualityIndex",
+                                  "Price_Sqft", "SalePrice","logSalePrice",
+                                  "BsmtFinSF1", "TotalBsmtSF",
+                                  "HouseAge", "YearRemodel", "GarageYrBlt", "YearBuilt",
+                                  "LotArea", "LotShape", "LotFrontage",
+                                  "Neighborhood", "HouseStyle", "BldgType", 
+                                  "Heating", "FullBath", "HalfBath", 
+                                  "OverallQual", "OverallCond", "GrLivArea",
+                                  "Utilities", "PoolArea", "GarageCars", "Fireplaces",
+                                  "KitchenQual", "BedroomAbvGr"))
 
-data.model <- model.data[BldgType == "1Fam"]
+str(data.model)
+
+numeric.col <- unlist(lapply(data.model, is.numeric))
+data.model.numeric <- data.model[, numeric.col, with = F]
+
+str(data.model.numeric)
+
+# correlation matrix
+
+sale.cor <- cor(data.model.numeric, use = "pairwise.complete.obs")[, "SalePrice"]
+sale.cor <- sort(sale.cor, decreasing = T)
+
+sale.cor <- sale.cor[-1] # remove SalePrice
+sale.cor <- sale.cor[-1] # remove LogSalePrice
+
+tbl.sale.cor <- melt(sale.cor)
+colnames(tbl.sale.cor) <- c("Correlation to Sale Price")
+
+formattable(tbl.sale.cor, align = c("l", "r"),
+            list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+))
+
+# Sample Population
+
+data.model <- data.model[BldgType == "1Fam"]
 
 ggplot(data.model, aes(y = data.model$SalePrice)) +
   geom_boxplot(outlier.colour = "black", fill = "#1C93D1", outlier.shape = 16,
@@ -96,6 +120,7 @@ ggplot(data.model, aes(y = data.model$SalePrice)) +
 sd(data.model$SalePrice) * 3
 mean(data.model$SalePrice)
 
+# Data Quality Checks
 data.model <- data.model[SalePrice < 700000]
 
 ggplot(data.model, aes(y = data.model$SalePrice)) +
@@ -104,4 +129,3 @@ ggplot(data.model, aes(y = data.model$SalePrice)) +
   coord_flip() +
   labs(x = "", y = "Sale Price") +
   scale_y_continuous(labels = dollar_format(largest_with_cents = .2))
-
