@@ -26,12 +26,34 @@ theme_update(plot.title = element_text(hjust = 0.5),
 
 data.housing <- as.data.table(read.csv(file = "ames_housing_data.csv", head = TRUE, sep = ","))
 
+#####################################################################
+######################### Assignment 1 ##############################
+#####################################################################
+
+# Utility Functions
+
+getCorTable <- function(cols) {
+  # selected features correlation matrix
+  sale.cor <- cor(cols, use = "pairwise.complete.obs")[, "SalePrice"]
+  sale.cor <- sort(sale.cor, decreasing = T)
+
+  sale.cor <- sale.cor[-1] # remove SalePrice
+  sale.cor <- sale.cor[-1] # remove LogSalePrice
+
+  tbl.sale.cor <- melt(sale.cor)
+  colnames(tbl.sale.cor) <- c("Correlation to Sale Price")
+
+  formattable(tbl.sale.cor, align = c("l", "r"),
+              list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+  ))
+}
+
 # Basic Data Structure
 ncol(data.housing)
 head(data.housing)
 names(data.housing)
 
-# Clean-up
+# New Features
 
 data.housing[, TotalFloorSF := FirstFlrSF + SecondFlrSF]
 data.housing[, HouseAge := YrSold - YearBuilt]
@@ -47,9 +69,12 @@ ggplot(data.housing) +
   geom_histogram(aes(data.housing$Price_Sqft, fill = ..count..), breaks = pretty(data.housing$Price_Sqft)) +
   labs(x = "Price / Sqft", y = "Count")
 
-#####################################################################
-######################### Assignment 1 ##############################
-#####################################################################
+housing.numeric.col <- unlist(lapply(data.housing, is.numeric))
+data.housing.numeric <- data.housing[, housing.numeric.col, with = F]
+
+str(data.housing.numeric)
+
+getCorTable(data.housing.numeric)
 
 # General EDA
 
@@ -73,38 +98,45 @@ str(building.info)
 
 # Model Data
 
-data.model <- subset(data.housing, select = c("TotalFloorSF", "QualityIndex",
-                                  "Price_Sqft", "SalePrice","logSalePrice",
-                                  "BsmtFinSF1", "TotalBsmtSF",
-                                  "HouseAge", "YearRemodel", "GarageYrBlt", "YearBuilt",
+data.model <- subset(data.housing, select = c(
+                                  # Response
+                                  "SalePrice", "logSalePrice",
+
+                                  # Quality
+                                  "OverallQual", "QualityIndex",
+                                  "Price_Sqft", "Neighborhood",
+
+                                  # Size Related
+                                  "TotalFloorSF", "TotalBsmtSF", "FirstFlrSF",
+                                  "GrLivArea",
+
+                                  # High Value Features
+                                  "GarageCars", "GarageArea", "GarageYrBlt",
+                                  "FullBath", "HalfBath", 
+                                  "MasVnrArea", "MasVnrType",
+                                  "PoolArea", "Fireplaces",
+                                  "KitchenQual", "BedroomAbvGr",
+                                  "Heating", "Utilities",
+
+                                  # Temporal
+                                  "HouseAge", "YearRemodel", "YearBuilt",
+
+                                  # Housing Lot
                                   "LotArea", "LotShape", "LotFrontage",
-                                  "Neighborhood", "HouseStyle", "BldgType", 
-                                  "Heating", "FullBath", "HalfBath", 
-                                  "OverallQual", "OverallCond", "GrLivArea",
-                                  "Utilities", "PoolArea", "GarageCars", "Fireplaces",
-                                  "KitchenQual", "BedroomAbvGr"))
+
+                                  # Housing Style
+                                  "HouseStyle", "BldgType"))
 
 str(data.model)
 
-numeric.col <- unlist(lapply(data.model, is.numeric))
-data.model.numeric <- data.model[, numeric.col, with = F]
+# Model Data Correlations
+
+model.numeric.col <- unlist(lapply(data.model, is.numeric))
+data.model.numeric <- data.model[, model.numeric.col, with = F]
 
 str(data.model.numeric)
 
-# correlation matrix
-
-sale.cor <- cor(data.model.numeric, use = "pairwise.complete.obs")[, "SalePrice"]
-sale.cor <- sort(sale.cor, decreasing = T)
-
-sale.cor <- sale.cor[-1] # remove SalePrice
-sale.cor <- sale.cor[-1] # remove LogSalePrice
-
-tbl.sale.cor <- melt(sale.cor)
-colnames(tbl.sale.cor) <- c("Correlation to Sale Price")
-
-formattable(tbl.sale.cor, align = c("l", "r"),
-            list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
-))
+getCorTable(data.model.numeric)
 
 # Sample Population
 
