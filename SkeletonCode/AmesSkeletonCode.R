@@ -1,5 +1,11 @@
+path.work <- "E:/GitHub/MSDS-RegressionAnalysis/data"
+path.home <- "D:/Projects/MSDS-RegressionAnalysis/data"
 
-setwd("C:/Users/Syamala.srinivasan/Google Drive/NorthWestern/LectureMaterials410/RAssignments/Assignments")
+if (file.exists(path.home)) {
+  setwd(path.home)
+} else {
+  setwd(path.work)
+}
 
 ##################
 
