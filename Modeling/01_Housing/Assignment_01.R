@@ -10,6 +10,10 @@ library(reshape2)
 library(skimr)
 library(gridExtra)
 
+#####################################################################
+######################### Assignment 1 ##############################
+#####################################################################
+
 path.work <- "E:/GitHub/MSDS-RegressionAnalysis/data"
 path.home <- "D:/Projects/MSDS-RegressionAnalysis/data"
 
@@ -391,3 +395,4 @@ ggplotMultRegression(mlr, lm(formula = logSalePrice ~ GrLivArea + YearBuilt, dat
 
 mlr <- data.model[, .(GrLivArea, YearBuilt, OverallQual, logSalePrice)]
 ggplotMultRegression(mlr, lm(formula = logSalePrice ~ GrLivArea + YearBuilt + OverallQual, data = mlr))
+
