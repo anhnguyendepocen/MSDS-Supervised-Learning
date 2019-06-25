@@ -108,7 +108,6 @@ aov(HouseholdIncome ~ College, m1)
 
 summary(model_1)
 
-
 # Long-hand LM
 model_1_slope <- cor(m1$College, m1$HouseholdIncome) * (sd(m1$HouseholdIncome) / sd(m1$College))
 model_1_intercept <- mean(m1$HouseholdIncome) - (model_1_slope * mean(m1$College))
@@ -130,6 +129,6 @@ sst <- sum((m1$HouseholdIncome - y_bar) ** 2)
 
 ssr <- sum((m1$Y_Hat - y_bar) ** 2)
 
-ssr / sst
+(ssr / sst)
 
 stopifnot(sst == (ssr + sse))
