@@ -39,15 +39,16 @@ data.states <- as.data.table(read.csv(file = "USStates.csv", head = TRUE, sep = 
 
 # 2.)
 
-skim(data.states)
+skim(data.nondemo)
 
-stats <- as.data.frame(summarytools::descr(data.states))
+data.nondemo <- data.states[, !c('State', 'Region', 'Population')]
+
+stats <- as.data.frame(summarytools::descr(data.nondemo, display.labels = colnames(data.nondemo)))
 
 formattable(stats, align = c("l", "c", "c", "c", "c", "c", "c", "c", "c", "r"),
             list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
 ))
 
-data.nondemo <- data.states[, !c('State', 'Region', 'Population')]
 data.income <- melt(data.nondemo, id.vars = c('HouseholdIncome'))
 
 ggplot(data.income) +
@@ -112,6 +113,8 @@ summary(model_1)
 model_1_slope <- cor(m1$College, m1$HouseholdIncome) * (sd(m1$HouseholdIncome) / sd(m1$College))
 model_1_intercept <- mean(m1$HouseholdIncome) - (model_1_slope * mean(m1$College))
 
+# 5.)
+
 # SSE
 
 m1$Y_Hat <- predict(model_1)
@@ -129,10 +132,49 @@ sst <- sum((m1$HouseholdIncome - y_bar) ** 2)
 
 ssr <- sum((m1$Y_Hat - y_bar) ** 2)
 
-(ssr / sst)
+# R2
 
-sd(m1$residual)
+(ssr / sst)
 
 stopifnot(round(sst, 3) == round(ssr + sse, 3))
 
+# 6.)
+
+m2 <- data.nondemo[, .(College, Insured, HouseholdIncome)]
+
+model_2 <- lm(formula = HouseholdIncome ~ College + Insured, data = m2)
+
+summary(model_2)
+
+ggplotRegression(model_2)
+
+aov(formula = HouseholdIncome ~ College + Insured, data = m2)
+
+anova(model_2)
+
+# 7.)
+
+
+model.values <- data.table(Model = "College", R2 = signif(summary(model_1)$r.squared, 5))
+model.values <- rbind(model.values, data.table(Model = "College + Insured", R2 = signif(summary(model_2)$r.squared, 5)))
+
+model_3 <- lm(formula = HouseholdIncome ~ College + Smokers, data = data.nondemo)
+summary(model_3)
+model.values <- rbind(model.values, data.table(Model = "College + Smokers", R2 = signif(summary(model_3)$r.squared, 5)))
+
+model_4 <- lm(formula = HouseholdIncome ~ College + PhysicalActivity, data = data.nondemo)
+summary(model_4)
+model.values <- rbind(model.values, data.table(Model = "College + PhysicalActivity", R2 = signif(summary(model_4)$r.squared, 5)))
+
+model_5 <- lm(formula = HouseholdIncome ~ College + TwoParents, data = data.nondemo)
+summary(model_5)
+model.values <- rbind(model.values, data.table(Model = "College + TwoParents", R2 = signif(summary(model_5)$r.squared, 5)))
+
+model_6 <- lm(formula = HouseholdIncome ~ College + HeavyDrinkers, data = data.nondemo)
+summary(model_6)
+model.values <- rbind(model.values, data.table(Model = "College + HeavyDrinkers", R2 = signif(summary(model_6)$r.squared, 5)))
+
+model_7 <- lm(formula = HouseholdIncome ~ College + HighSchool, data = data.nondemo)
+summary(model_7)
+model.values <- rbind(model.values, data.table(Model = "College + •	High School", R2 = signif(summary(model_7)$r.squared, 5)))
 
