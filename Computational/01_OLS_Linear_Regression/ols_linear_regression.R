@@ -131,4 +131,8 @@ ssr <- sum((m1$Y_Hat - y_bar) ** 2)
 
 (ssr / sst)
 
-stopifnot(sst == (ssr + sse))
+sd(m1$residual)
+
+stopifnot(round(sst, 3) == round(ssr + sse, 3))
+
+
