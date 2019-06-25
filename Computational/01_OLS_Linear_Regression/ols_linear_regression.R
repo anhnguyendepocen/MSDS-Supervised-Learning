@@ -154,27 +154,30 @@ anova(model_2)
 
 # 7.)
 
-
 model.values <- data.table(Model = "College", R2 = signif(summary(model_1)$r.squared, 5))
 model.values <- rbind(model.values, data.table(Model = "College + Insured", R2 = signif(summary(model_2)$r.squared, 5)))
 
-model_3 <- lm(formula = HouseholdIncome ~ College + Smokers, data = data.nondemo)
+model_3 <- lm(formula = HouseholdIncome ~ College + Insured + Smokers, data = data.nondemo)
 summary(model_3)
-model.values <- rbind(model.values, data.table(Model = "College + Smokers", R2 = signif(summary(model_3)$r.squared, 5)))
+model.values <- rbind(model.values, data.table(Model = "College + Insured + Smokers", R2 = signif(summary(model_3)$r.squared, 5)))
 
-model_4 <- lm(formula = HouseholdIncome ~ College + PhysicalActivity, data = data.nondemo)
+model_4 <- lm(formula = HouseholdIncome ~ College + Insured + Smokers + PhysicalActivity, data = data.nondemo)
 summary(model_4)
-model.values <- rbind(model.values, data.table(Model = "College + PhysicalActivity", R2 = signif(summary(model_4)$r.squared, 5)))
+model.values <- rbind(model.values, data.table(Model = "College + Insured + Smokers + PhysicalActivity", R2 = signif(summary(model_4)$r.squared, 5)))
 
-model_5 <- lm(formula = HouseholdIncome ~ College + TwoParents, data = data.nondemo)
+model_5 <- lm(formula = HouseholdIncome ~ College + Insured + Smokers + PhysicalActivity + TwoParents, data = data.nondemo)
 summary(model_5)
-model.values <- rbind(model.values, data.table(Model = "College + TwoParents", R2 = signif(summary(model_5)$r.squared, 5)))
+model.values <- rbind(model.values, data.table(Model = "College + Insured + Smokers + PhysicalActivity + TwoParents", R2 = signif(summary(model_5)$r.squared, 5)))
 
-model_6 <- lm(formula = HouseholdIncome ~ College + HeavyDrinkers, data = data.nondemo)
+model_6 <- lm(formula = HouseholdIncome ~ College + Insured + Smokers + PhysicalActivity + TwoParents  + HeavyDrinkers, data = data.nondemo)
 summary(model_6)
-model.values <- rbind(model.values, data.table(Model = "College + HeavyDrinkers", R2 = signif(summary(model_6)$r.squared, 5)))
+model.values <- rbind(model.values, data.table(Model = "College + Insured + Smokers + PhysicalActivity + TwoParents + HeavyDrinkers", R2 = signif(summary(model_6)$r.squared, 5)))
 
-model_7 <- lm(formula = HouseholdIncome ~ College + HighSchool, data = data.nondemo)
+model_7 <- lm(formula = HouseholdIncome ~ College + Insured + Smokers + PhysicalActivity + TwoParents + HeavyDrinkers + HighSchool, data = data.nondemo)
 summary(model_7)
-model.values <- rbind(model.values, data.table(Model = "College + •	High School", R2 = signif(summary(model_7)$r.squared, 5)))
+model.values <- rbind(model.values, data.table(Model = "College + Insured + Smokers + PhysicalActivity + TwoParents + HeavyDrinkers + High School", R2 = signif(summary(model_7)$r.squared, 5)))
+
+formattable(model.values, align = c("l", "r"),
+            list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+))
 
