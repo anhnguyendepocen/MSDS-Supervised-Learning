@@ -177,7 +177,25 @@ model_7 <- lm(formula = HouseholdIncome ~ College + Insured + Smokers + Physical
 summary(model_7)
 model.values <- rbind(model.values, data.table(Model = "College + Insured + Smokers + PhysicalActivity + TwoParents + HeavyDrinkers + High School", R2 = signif(summary(model_7)$r.squared, 5)))
 
+model_7 <- lm(formula = HouseholdIncome ~ College + Insured + Smokers + PhysicalActivity + TwoParents + HeavyDrinkers + HighSchool, data = data.nondemo)
+summary(model_7)
+model.values <- rbind(model.values, data.table(Model = "College + Insured + Smokers + PhysicalActivity + TwoParents + HeavyDrinkers + High School", R2 = signif(summary(model_7)$r.squared, 5)))
+
 formattable(model.values, align = c("l", "r"),
             list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
 ))
+
+# 8.)
+
+m3 <- data.nondemo[, .(College, Smokers, Obese, HouseholdIncome)]
+
+model_3 <- lm(formula = HouseholdIncome ~ College + Smokers, data = m3)
+
+summary(model_3)
+
+ggplotRegression(model_3)
+
+aov(formula = HouseholdIncome ~ College + Obese, data = m3)
+
+anova(model_3)
 
