@@ -187,15 +187,57 @@ formattable(model.values, align = c("l", "r"),
 
 # 8.)
 
+ggplotMultRegression <- function(data, fit) {
+
+  p1 <- ggplot(melt(data, id.vars = 'HouseholdIncome')) +
+    geom_jitter(aes(value, HouseholdIncome, colour = variable),) + geom_smooth(aes(value, HouseholdIncome, colour = variable), method = lm, se = FALSE) +
+    facet_wrap(~variable, scales = "free_x") +
+    labs(x = "Variable", y = "Household Income",
+         title = paste("Adj R2 = ", signif(summary(fit)$adj.r.squared, 5),
+                        "Intercept =", signif(fit$coef[[1]], 5),
+                        " Slope =", signif(fit$coef[[2]], 5),
+                        " P =", signif(summary(fit)$coef[2, 4], 5)))
+
+  res <- as.data.table(residuals(fit))
+  colnames(res) <- c("value")
+
+  p2 <- ggplot(res, aes(value, fill = ..count..)) +
+    geom_histogram(breaks = pretty(res$value)) +
+    labs(title = "Residuals")
+
+  grid.arrange(p1, p2)
+}
+
 m3 <- data.nondemo[, .(College, Smokers, Obese, HouseholdIncome)]
 
 model_3 <- lm(formula = HouseholdIncome ~ College + Smokers, data = m3)
 
 summary(model_3)
 
-ggplotRegression(model_3)
+ggplotMultRegression(m3, lm(formula = HouseholdIncome ~ College + Smokers, data = m3))
 
-aov(formula = HouseholdIncome ~ College + Obese, data = m3)
+ggplotMultRegression(m3, lm(formula = HouseholdIncome ~ College + Obese, data = m3))
+
+aov(formula = HouseholdIncome ~ College + Smokers, data = m3)
 
 anova(model_3)
+
+cor(m3$College, m3$Smokers)
+
+cs_fit <- lm(formula = College ~ Smokers, data = m3)
+summary(cs_fit)
+
+# 9.)
+
+data.smokers <- melt(data.nondemo, id.vars = c('Smokers'))
+
+ggplot(data.smokers) +
+    geom_jitter(aes(value, Smokers, colour = variable),) +
+    geom_smooth(aes(value, Smokers, colour = variable), method = lm, se = FALSE) +
+    facet_wrap(~variable, scales = "free_x")
+
+smokers_fit <- lm(formula = Smokers ~ HouseholdIncome, data = data.nondemo)
+summary(smokers_fit)
+
+# 10.)
 
