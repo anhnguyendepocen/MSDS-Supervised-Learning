@@ -136,6 +136,8 @@ ssr <- sum((m1$Y_Hat - y_bar) ** 2)
 
 (ssr / sst)
 
+ssr + sse
+
 stopifnot(round(sst, 3) == round(ssr + sse, 3))
 
 # 6.)
@@ -151,6 +153,8 @@ ggplotRegression(model_2)
 aov(formula = HouseholdIncome ~ College + Insured, data = m2)
 
 anova(model_2)
+
+nrow(m2)
 
 # 7.)
 
@@ -208,7 +212,7 @@ ggplotMultRegression <- function(data, fit) {
   grid.arrange(p1, p2)
 }
 
-m3 <- data.nondemo[, .(College, Smokers, Obese, HouseholdIncome)]
+m3 <- data.nondemo[, .(College, Obese, HouseholdIncome)]
 
 model_3 <- lm(formula = HouseholdIncome ~ College + Smokers, data = m3)
 
