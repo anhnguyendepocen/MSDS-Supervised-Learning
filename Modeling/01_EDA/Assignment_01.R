@@ -75,6 +75,7 @@ data.housing[, HouseAge := YrSold - YearBuilt]
 data.housing[, QualityIndex := OverallQual * OverallCond]
 data.housing[, logSalePrice := log(SalePrice)]
 data.housing[, Price_Sqft := SalePrice / TotalFloorSF]
+data.housing[, TotalBath := FullBath + HalfBath]
 
 summary(data.housing)
 

@@ -42,7 +42,7 @@ T ^ 2
 
 c(beta1 - alpha1, beta1 + alpha1)
 
-crit.value <- abs(qt(alpha1 / 2, 72 - 2)) # 99% confidence, 2 sided
+crit.value <- abs(qt(alpha1 / 2, 72 - 4 - 2)) # 99% confidence, 2 sided
 round(crit.value, 4)
 
 abs(T) > crit.value
