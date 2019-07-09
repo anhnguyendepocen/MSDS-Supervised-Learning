@@ -34,10 +34,6 @@ theme_update(plot.title = element_text(hjust = 0.5),
 
 data.housing <- as.data.table(read.csv(file = "ames_housing_data.csv", head = TRUE, sep = ","))
 
-#####################################################################
-######################### Assignment 1 ##############################
-#####################################################################
-
 # Utility Functions
 
 getCorTable <- function(cols) {
@@ -64,6 +60,7 @@ g_legend <- function(a.gplot) {
 }
 
 # Basic Data Structure
+
 ncol(data.housing)
 head(data.housing)
 names(data.housing)
