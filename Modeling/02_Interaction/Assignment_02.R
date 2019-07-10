@@ -9,6 +9,7 @@ library(scales)
 library(reshape2)
 library(skimr)
 library(gridExtra)
+library(lessR)
 
 #####################################################################
 ######################### Assignment 2 ##############################
@@ -240,6 +241,30 @@ ggplot(data.clean.stats, aes(x = id, y = Records, fill = Step)) +
 
 # Model Data
 
+skim(data.model)
+
+ggplot(data.model) +
+  geom_histogram(aes(data.model$BedroomAbvGr, fill = ..count..), breaks = pretty(data.model$BedroomAbvGr)) +
+  labs(y = "Count")
+
+summary(data.model$BsmtExposure)
+
+ggplot(data.cleaned) +
+  geom_boxplot(aes(x = BsmtExposure, y = SalePrice, fill = SaleCondition)) +
+  coord_flip() +
+  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
+  theme(legend.position = "bottom")
+
+ggplot(data.model) +
+  geom_histogram(aes(data.model$WoodDeckSF, fill = ..count..), breaks = pretty(data.model$WoodDeckSF)) +
+  labs(y = "Count")
+
+ggplot(data.cleaned) +
+  geom_boxplot(aes(x = BsmtExposure, y = SalePrice, fill = SaleCondition)) +
+  coord_flip() +
+  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
+  theme(legend.position = "bottom")
+
 data.model <- subset(data.clean.stats, select = c(
 # Response
     "SalePrice", "logSalePrice",
@@ -278,29 +303,124 @@ data.model.numeric <- data.model[, model.numeric.col, with = F]
 
 str(data.model.numeric)
 
-data.model.quality <- subset(data.housing, select = c(
-    # Quality
-    "OverallQual", "QualityIndex",
-    "Price_Sqft",
+# Simple Linear Models
 
-    # Size Related
-    "TotalFloorSF", "TotalBsmtSF", "FirstFlrSF",
-    "GrLivArea",
+ggplotRegression <- function(fit) {
+  p1 <- ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) +
+    geom_point() +
+    stat_smooth(method = "lm", col = "red") +
+    labs(title = paste("Adj R2 = ", signif(summary(fit)$adj.r.squared, 5),
+                      "Intercept =", signif(fit$coef[[1]], 5),
+                      " Slope =", signif(fit$coef[[2]], 5),
+                      " P =", signif(summary(fit)$coef[2, 4], 5))) +
+  scale_y_continuous(labels = dollar_format(largest_with_cents = .2))
 
-    # High Value Features
-    "GarageCars", "GarageArea", "GarageYrBlt",
-    "FullBath", "HalfBath",
-    "MasVnrArea",
-    "Fireplaces", "KitchenQual",
+  res <- data.table(Value = residuals(fit))
+  res.norm <- data.table(Value = (res$Value - mean(res$Value)) / sd(res$Value))
+  
+  p2 <- ggplot(res.norm, aes(Value, fill = ..count..)) +
+    geom_histogram(breaks = pretty(res.norm$Value)) +
+    labs(title = "Standardized Residuals")
 
-    # Temporal
-    "HouseAge", "YearRemodel", "YearBuilt",
+  grid.arrange(p1, p2)
+}
 
-    # Housing Lot
-    "LotArea", "LotFrontage"))
+# "Best" continious predictor
 
-summary(data.model.quality)
+model1_data <- data.model[, .(TotalFloorSF, SalePrice)]
+model1_fit <- lm(formula = SalePrice ~ TotalFloorSF, data = model1_data)
 
-melt(colnames(data.model.quality))
+yhat <- data.table(x = 10212 + 116.862 * model1_data$SalePrice, y = model1_data$SalePrice)
+yhat[, diff := x - y]
 
-data.model.quality %>% skim()
+# y-bar vs y
+ggplot(yhat) +
+  geom_point(aes(x, y, color = -diff)) +
+  scale_x_continuous(labels = dollar_format(largest_with_cents = .2)) +
+  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
+  theme(legend.position = "none")
+
+res <- data.table(Value = residuals(model1_fit))
+res.norm <- data.table(Value = (res$Value - mean(res$Value)) / sd(res$Value))
+
+ggplotRegression(model1_fit)
+
+summary(model1_fit)
+model1_anova <- anova(model1_fit)
+
+# tests
+
+options(scipen = 12)
+
+n <- nrow(data.model)
+p <- 1
+nt <- n - p - 2
+
+alpha1 <- 0.01
+
+# t-test
+t1 <- 116.862 / 2.215
+round(t1, 4)
+
+crit.value <- abs(qt(alpha1 / 2, nt)) # 99% confidence, 2 sided
+round(crit.value, 4)
+
+abs(t1) > crit.value
+
+# f-test
+ssr <- model1_anova$`Sum Sq`[1:p]
+sse <- model1_anova$`Sum Sq`[p + 1]
+sst <- ssr + sse
+
+f1 <- ((sst - sse) / p) / (sse / (n - p - 1))
+round(f1, 4)
+
+p.val <- df(f1, p, n - p - 1)
+
+round(p.val, 4)
+
+# Overall Qual discrete value
+
+model2_data <- data.model[, .(OverallQual, SalePrice)]
+model2_fit <- lm(formula = SalePrice ~ OverallQual, data = model2_data)
+
+ggplotRegression(model2_fit)
+
+summary(model2_fit)
+model2_anova <- anova(model2_fit)
+
+# t-test
+t2 <- 47086.6 / 715.4
+round(t2, 4)
+
+crit.value <- abs(qt(alpha1 / 2, nt)) # 99% confidence, 2 sided
+round(crit.value, 4)
+
+abs(t2) > crit.value
+
+# f-test
+ssr <- model2_anova$`Sum Sq`[1:p]
+sse <- model2_anova$`Sum Sq`[p + 1]
+sst <- ssr + sse
+
+f2 <- ((sst - sse) / p) / (sse / (n - p - 1))
+round(f2, 4)
+
+p.val <- df(f1, p, n - p - 1)
+
+round(p.val, 4)
+
+# y-bar vs y
+yhat <- data.table(x = 10.6184 + 0.2352 * model1_data$SalePrice, y = model1_data$SalePrice)
+yhat[, diff := x - y]
+
+ggplot(yhat) +
+  geom_point(aes(x, y, color = -diff)) +
+  scale_x_continuous(labels = dollar_format(largest_with_cents = .2)) +
+  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
+  theme(legend.position = "none")
+
+plot(model2_fit)
+
+d <- model2_data
+reg(SalePrice ~ OverallQual)
