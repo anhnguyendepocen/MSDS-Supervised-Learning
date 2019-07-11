@@ -422,5 +422,5 @@ ggplot(yhat) +
 
 plot(model2_fit)
 
-d <- model2_data
-reg(SalePrice ~ OverallQual)
+#d <- model2_data
+#reg(SalePrice ~ OverallQual)

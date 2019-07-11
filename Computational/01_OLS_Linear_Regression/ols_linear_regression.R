@@ -95,7 +95,7 @@ ggplotRegression <- function(fit) {
     geom_histogram(breaks = pretty(res$value)) +
     labs(title = "Residuals")
 
-  grid.arrange(p1, p2)
+  grid.arrange(p1)
 }
 
 # Model #1
