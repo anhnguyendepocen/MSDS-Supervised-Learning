@@ -656,4 +656,5 @@ ggplot(res) +
   scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
   labs(title = "Q-Q Plot of Residuals")
 
+summary(model8_fit)
 anova(model8_fit)
