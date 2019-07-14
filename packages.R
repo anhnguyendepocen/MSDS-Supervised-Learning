@@ -22,3 +22,5 @@ install.packages("formattable")
 install.packages("skimr")
 install.packages("summarytools")
 install.packages("lessR")
+
+devtools::install_github("cardiomoon/ggiraphExtra")

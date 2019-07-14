@@ -38,8 +38,6 @@ beta1 <- 2.186
 T <- beta1 / 0.4104
 T <- round(T, 4)
 
-T ^ 2
-
 c(beta1 - alpha1, beta1 + alpha1)
 
 crit.value <- abs(qt(alpha1 / 2, 72 - 4 - 2)) # 99% confidence, 2 sided
