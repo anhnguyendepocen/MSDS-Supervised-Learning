@@ -320,7 +320,7 @@ ggplotRegression <- function(fit) {
   res <- data.table(Value = residuals(fit))
   res.norm <- data.table(Value = (res$Value - mean(res$Value)) / sd(res$Value))
   
-  p2 <- ggplot(res.norm, aes(Value, fill = ..count..)) +
+  p2 <- ggplot(res, aes(Value, fill = ..count..)) +
     geom_histogram(breaks = pretty(res.norm$Value)) +
     labs(title = "Standardized Residuals")
 
