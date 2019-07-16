@@ -69,12 +69,19 @@ unique(data.nutrition$Gender)
 data.nutrition$GenderCoded <- as.factor(data.nutrition$Gender)
 levels(data.nutrition$GenderCoded) = c(0, 1)
 
-data.nutrition$SmokeCoded2 <- as.factor(data.nutrition$Smoke)
-levels(data.nutrition$SmokeCoded2) <- c(0, 1)
+data.nutrition$SmokeCoded <- as.factor(data.nutrition$Smoke)
+levels(data.nutrition$SmokeCoded) <- c(0, 1)
 
-str(data.nutrition)
+data.nutrition$PriorSmokeCoded <- as.factor(data.nutrition$PriorSmoke)
+levels(data.nutrition$PriorSmoke) <- c(0, 1)
+
+formattable(data.nutrition, align = c("l", "r"),
+  list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+))
 
 # Linear Model #1
+
+unique(data.nutrition$VitaminUse)
 
 model_data <- data.nutrition[, .(VitaminUse, VitaminCoded, VitaminCoded2, Cholesterol)]
 model1_fit <- lm(formula = Cholesterol ~ VitaminUse, data = model_data)
