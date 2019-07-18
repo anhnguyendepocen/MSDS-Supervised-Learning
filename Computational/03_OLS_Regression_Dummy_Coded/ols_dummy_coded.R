@@ -63,7 +63,7 @@ data.nutrition$VitaminCoded <- as.factor(data.nutrition$VitaminUse)
 levels(data.nutrition$VitaminCoded) = c(0, 1, 2)
 
 data.nutrition$VitaminCoded2 <- as.factor(data.nutrition$VitaminUse)
-levels(data.nutrition$VitaminCoded2) = c(3, 2, 1)
+levels(data.nutrition$VitaminCoded2) = c(1, 2, 3)
 
 unique(data.nutrition$Gender)
 data.nutrition$GenderCoded <- as.factor(data.nutrition$Gender)
@@ -86,17 +86,40 @@ unique(data.nutrition$VitaminUse)
 model_data <- data.nutrition[, .(VitaminUse, VitaminCoded, VitaminCoded2, Cholesterol)]
 model1_fit <- lm(formula = Cholesterol ~ VitaminUse, data = model_data)
 
+ybar <- mean(model_data[VitaminCoded == 0]$Cholesterol)
+model1_fit$coefficients[1] - ybar
+
+ybar_1 <- mean(model_data[VitaminCoded == 1]$Cholesterol)
+model1_fit$coefficients[1] - ybar_1
+
+ybar - ybar_1
+
+ybar_2 <- mean(model_data[VitaminCoded == 2]$Cholesterol)
+
+ggplot(model_data, aes(VitaminCoded, Cholesterol)) +
+  geom_point(show.legend = T) +
+  geom_hline(aes(yintercept = ybar, lwd = 1.5, color = "blue")) +
+  geom_point(aes(x = 1, y = ybar, size = 3, color = "red")) +
+  geom_point(aes(x = 2, y = ybar_1, size = 3, color = "red")) +
+  geom_point(aes(x = 3, y = ybar_2, size = 3, color = "red")) +
+  theme(legend.position = "none")
+
 summary(model1_fit)
+
+summary(model1_fit)$r.squared * 100
 
 ggplotRegression(model1_fit)
 
-model2_fit <- lm(formula = Cholesterol ~ VitaminCoded, data = model_data)
+model2_fit <- lm(formula = Cholesterol ~ VitaminCoded2, data = model_data)
 
 summary(model2_fit)
-ggplotRegression(model2_fit)
 
-model3_fit <- lm(formula = Cholesterol ~ VitaminCoded2, data = model_data)
+# Dummy Coded
 
+vit <- model.matrix(~VitaminUse, data = model_data)
+
+model2_data <- data.table( Cholesterol = model_data$Cholesterol, vit[, -1])
+
+model3_fit <- lm(formula = Cholesterol ~ VitaminUseOccasional + VitaminUseRegular, data = model2_data)
 summary(model3_fit)
-ggplotRegression(model3_fit)
 
