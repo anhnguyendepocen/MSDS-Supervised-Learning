@@ -1,0 +1,3 @@
+'Statistic','A_Strain','B_Strain','C_Strain','D_Strain'
+'Y_bar',420.3,330.7,540.4,450.8
+'S',30.22,28.9,31.08,33.29

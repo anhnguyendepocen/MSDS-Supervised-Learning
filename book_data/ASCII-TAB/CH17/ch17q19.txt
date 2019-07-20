@@ -1,0 +1,25 @@
+'FUND'	'CAT'	'LOAD'	'VOL'	'OPI'
+'''20th Century Giftrust Investors'''	1	'N'	'F'	89.9
+'''AIM Aggressive Growth'''	1	'L'	'F+'	92.4
+'''Stein Roe Capital Opport'''	1	'N'	'F+'	88.1
+'''FPA Capital'''	1	'L'	'D'	92.2
+'''Third Avenue Value'''	1	'N'	'B'	88.2
+'''Phoenix U.S. Govt. A'''	1	'L'	'D'	88
+'''Vanguard Primecap'''	2	'N'	'D+'	93.9
+'''MFS Research A'''	2	'L'	'D+'	94.5
+'''Fidelity Value'''	2	'N'	'B'	91.4
+'''Mairs & Power Growth'''	2	'N'	'C'	99.1
+'''Guardian Park Avenue'''	2	'L'	'C'	92.2
+'''AIM Value A'''	2	'L'	'D+'	90.6
+'''Lexington Corp. Leaders'''	3	'N'	'C'	91.3
+'''Fundamental Investors'''	3	'L'	'B'	92.7
+'''Oppenheimer Main St. Inc. & Grth.A'''	3	'L'	'D+'	90.8
+'''MAS Value Portfolio'''	3	'N'	'B'	99.8
+'''Vanguard Index Value'''	3	'N'	'B'	88.9
+'''Putnam Growth and Income'''	3	'L'	'B+'	90.8
+'''Federated Liberty Equity Income A'''	4	'L'	'B'	89.5
+'''United Income A'''	4	'L'	'C+'	76.8
+'''Benham Inc. & Growth'''	4	'N'	'B+'	89.8
+'''Manager''s Income Equity'''	4	'N'	'B'	84.7
+'''Pioneer Equity Income'''	4	'L'	'B+'	84
+'''One Group Income Equity A'''	4	'N'	'B+'	83.3

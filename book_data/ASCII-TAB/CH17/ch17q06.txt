@@ -1,0 +1,4 @@
+'Col1'	'ni'	'Yi'	'Si'
+'HI-POS'	50	65	9
+'NO-DIF'	75	50	11
+'HI-NEG'	75	55	10

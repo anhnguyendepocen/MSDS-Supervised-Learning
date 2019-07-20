@@ -26,6 +26,8 @@ if (file.exists(path.home)) {
 theme_set(theme_light())
 
 # t-test for beta1
+n <- 12
+p <- 3
 
 ssr <- 588.92 + 103.90 + 0.24
 sse <- 195.19
@@ -78,8 +80,9 @@ round(p.val, 4)
 
 # F-test compare
 
-k <- 6
-f.val <- (630.36 - 572.3091) / (572.3091 / (n - ( k + 1 )))
+p <- 2
+
+f.val <- ( (630.36 - 572.3091) / p ) / (572.3091 / (n - ( p + 1 )))
 round(f.val, 4)
 
 alpha = .01

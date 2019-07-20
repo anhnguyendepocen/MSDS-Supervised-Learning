@@ -1,0 +1,27 @@
+'MSA','OWNEROCC','OWNCOST'
+'Abilene, TX',62,583
+'Burlington, NC',72,627
+'Daytona Beach, FL',72,636
+'Grand Rapids, MI',73,677
+'Laredo, TX',61,614
+'Louisville, KY-IN',67,561
+'Oklahome City, OK',64,627
+'Pine Bluff, AR',67,513
+'San Francisco--Oakland--San Jose, CA',57,1234
+'Wichita Falls, TX',63,565
+'Albany, GA',56,597
+'Canton, OH',71,555
+'Des Moines, IA',67,673
+'Jacksonville, FL',65,687
+'Johnstown, PA',75,510
+'Medford, OR',66,660
+'Omaha, NE-IA',64,687
+'Provo--Orem, UT',63,659
+'Williamsburg, PA',70,564
+'Appleton--Oskosh--Neenah, WI',70,663
+'Melbourne--Titusville--Palm Bay, Fl',69,675
+'Redding, CA',65,682
+'Worcester, MA',60,918
+'Milwaukee--Racine, WI',60,777
+'Rochester, NY',68,818
+'St. Joseph, MO',68,457

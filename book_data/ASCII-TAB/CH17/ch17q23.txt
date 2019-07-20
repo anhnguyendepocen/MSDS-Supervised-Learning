@@ -1,0 +1,19 @@
+'HMO'	'PREV'	'PHYSTURN'	'PHYSCERT'
+'HMO Kentucky'	-114	1	64
+'Kaiser Foundation (HI Region)'	-6	7	92
+'CIGNA HealthCare of LA'	-97	6	80
+'CIGNA HealthCare of S. California'	-82	8	81
+'CIGNA HealthCare of N. California'	-42	21	82
+'HIP Health Plan of Florida'	-8	3	80
+'CIGNA HealthCare of San Diego'	-36	5	76
+'NYLCare of theMid-Atlantic'	-9	6	80
+'Personalcare Insurance of Illinois'	-26	13	74
+'Prudential Healthcare Tri-state'	-78	9	71
+'CIGNA HealthCare of S. Florida'	-26	4	77
+'Health New England'	11	5	79
+'Group Health Northwest'	4	3	90
+'Kaiser Foundation - Mid-Atlantic'	29	4	92
+'Health Alliance Medical Plans'	-28	6	82
+'Pilgrim Health Care'	22	2	83
+'Partners National Health, NC'	-1	6	84
+'Healthsource of New Hampshire'	11	5	81

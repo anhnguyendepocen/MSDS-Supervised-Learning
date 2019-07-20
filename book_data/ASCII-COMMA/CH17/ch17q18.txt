@@ -1,0 +1,6 @@
+'Customer','Size','Expenditure','SD'
+'ABC_loyalty',84,75,13
+'ABC_new',25,65,10
+'ABC_defect',27,82,14
+'Competitors',173,93,17
+'Unaffliated',233,82,15
