@@ -80,13 +80,18 @@ round(p.val, 4)
 
 # F-test compare
 
-p <- 2
+n <- 72
+dff <- 65
+dfr <- 67
+dfn <- dfr - dfn
+ss_r <- 630.36
+ss_f <- 572.6091
 
-f.val <- ( (630.36 - 572.3091) / p ) / (572.3091 / (n - ( p + 1 )))
-round(f.val, 4)
+f.val <- ((ss_r - ss_f) / dfn) / (ss_f / dff)
+round(f.val, 4) # 3.278
 
-alpha = .01
-f.crit <- qf(1 - alpha, 4, (n - (k + 1)))
+alpha = .05
+f.crit <- qf(1 - alpha, dfn, dff)
 round(f.crit, 4)
 
 f.val > f.crit

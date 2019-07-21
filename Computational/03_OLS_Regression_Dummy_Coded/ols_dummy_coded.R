@@ -213,6 +213,7 @@ data.interaction[, ':='(HO = AlcoholHeavy * VitaminOccasional, HR = AlcoholHeavy
 
 full_fit <- lm(formula = Cholesterol ~ AlcoholModerate + AlcoholHeavy + VitaminOccasional + VitaminRegular + HO + HR + MO + MR, data = data.interaction)
 summary(full_fit)
+anova(full_fit)
 
 reduced_fit <- lm(formula = Cholesterol ~ AlcoholModerate + AlcoholHeavy + VitaminOccasional + VitaminRegular, data = data.interaction)
 summary(reduced_fit)
@@ -220,17 +221,78 @@ summary(reduced_fit)
 # F-test
 
 m1_aov <- anova(full_fit)
-
 m2_aov <- anova(reduced_fit)
 
 df_1 <- 4
 df_2 <- 2
 
-ss_f <- sum(m1_aov$`Sum Sq`[1:length(m1_aov$`Sum Sq`) - 1])
-ss_r <- sum(m2_aov$`Sum Sq`[1:length(m2_aov$`Sum Sq`) - 1])
+ss_f <- m1_aov$`Sum Sq`[length(m1_aov$`Sum Sq`)]
+ss_r <- m2_aov$`Sum Sq`[length(m2_aov$`Sum Sq`)]
 msf <- sum( m1_aov$`Mean Sq` )
 
-f.val <- (ss_r - ss_f / df_1) / msf
+n <- nrow(data.nutrition)
+
+k <- 4
+p <- 8
+
+f.val <- ((ss_r - ss_f) / k) / (ss_f / (n - (p + 1)))
+round(f.val, 4)
+
+dff <- 306
+dfr <- 310
+dfn <- dfr - dff
+
+f.val <- ((ss_r - ss_f) / dfn) / (ss_f / dff)
+f.val
+
+alpha = .05
+f.crit <- qf(1 - alpha, dfn, dff)
+round(f.crit, 4)
+
+f.val > f.crit
+
+anova(full_fit, reduced_fit)
+
+alcohol.no <- mean(data.nutrition[AlcoholUse == 'None']$Cholesterol)
+alcohol.heavy <- mean(data.nutrition[AlcoholUse == 'Heavy']$Cholesterol)
+
+ggplot(data.nutrition, aes(AlcoholUse, Cholesterol, fill = AlcoholUse)) +
+  geom_boxplot() +
+  coord_flip()
+
+ggplot(data.nutrition, aes(VitaminUse, Cholesterol, fill = AlcoholUse)) +
+  geom_boxplot() +
+  coord_flip()
+
+# Gender / Smoke
+
+data.interaction$Gender <- data.nutrition$GenderCoded
+data.interaction$Smoke <- data.nutrition$SmokeCoded
+
+full_fit <- lm(formula = Cholesterol ~ AlcoholModerate + AlcoholHeavy + VitaminOccasional + VitaminRegular + HO + HR + MO + MR + Gender + Smoke, data = data.interaction)
+summary(full_fit)
+
+reduced_fit <- lm(formula = Cholesterol ~ AlcoholModerate + AlcoholHeavy + VitaminOccasional + VitaminRegular + HO + HR + MO + MR, data = data.interaction)
+summary(reduced_fit)
+
+m1_aov <- anova(full_fit)
+m2_aov <- anova(reduced_fit)
+
+dff <- 304
+dfr <- 306
+dfn <- dfr - dff
+
+ss_f <- m1_aov$`Sum Sq`[length(m1_aov$`Sum Sq`)]
+ss_r <- m2_aov$`Sum Sq`[length(m2_aov$`Sum Sq`)]
+
+f.val <- ((ss_r - ss_f) / dfn) / (ss_f / dff)
+round(f.val, 4)
+
+alpha = .05
+f.crit <- qf(1 - alpha, dfn, dff)
+round(f.crit, 4)
+
+f.val > f.crit
 
 anova(full_fit, reduced_fit)
 
