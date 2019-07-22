@@ -130,6 +130,8 @@ ggplotRegression(model2_fit)
 
 # Dummy Coded
 
+tapply(data.nutrition$Cholesterol, data.nutrition$VitaminUse, mean)
+
 vit <- model.matrix(~VitaminUse, data = data.nutrition)
 
 model4_data <- data.table(Cholesterol = data.nutrition$Cholesterol, VitaminUse = data.nutrition$VitaminUse, vit[, -1])
@@ -164,16 +166,12 @@ tapply(data.nutrition$Cholesterol, data.nutrition$VitaminUse, mean)
 data.nutrition$VitaminRegular <- ifelse(data.nutrition$VitaminUse == "Regular", 1, -1)
 data.nutrition$VitaminOccasional <- ifelse(data.nutrition$VitaminUse == "Occasional", 1, -1)
 
-model5_data <- data.nutrition[, .(Cholesterol, VitaminUse)]
-model5_data$VitaminUse <- factor(model5_data$VitaminUse, levels = c("No", "Occasional", "Regular"))
-
-model5_data$VitaminRegular <- ifelse(model5_data$VitaminUse == "Regular", 1, -1)
-model5_data$VitaminOccasional <- ifelse(model5_data$VitaminUse == "Occasional", 1, -1)
-
-model5_fit <- lm(formula = Cholesterol ~ VitaminOccasional + VitaminRegular, data = model5_data)
+model5_fit <- lm(formula = Cholesterol ~ VitaminOccasional + VitaminRegular, data = data.nutrition)
 
 summary(model5_fit)
 anova(model5_fit)
+
+summary(model5_fit)$r.squared * 100
 
 intercept <- 241.0668
 beta1 <- -0.5782
@@ -184,12 +182,13 @@ intercept + beta2
 
 mean(model5_data$Cholesterol)
 
-ybar <- mean(model5_data[VitaminUse == 'No']$Cholesterol)
-ybar_1 <- mean(model5_data[VitaminUse == 'Occasional']$Cholesterol)
-ybar_2 <- mean(model5_data[VitaminUse == 'Regular']$Cholesterol)
+ybar <- mean(data.nutrition[VitaminUse == 'No']$Cholesterol)
+ybar_1 <- mean(data.nutrition[VitaminUse == 'Occasional']$Cholesterol)
+ybar_2 <- mean(data.nutrition[VitaminUse == 'Regular']$Cholesterol)
 
-ggplot(model5_data, aes(VitaminUse, Cholesterol, fill = VitaminUse)) +
+ggplot(data.nutrition, aes(VitaminUse, Cholesterol, fill = VitaminUse)) +
   geom_boxplot() +
+  geom_hline(aes(yintercept = 241.0668, lwd = .7), color = "blue") +
   geom_point(aes(x = 1, y = intercept, size = 1), color = "blue") +
   geom_point(aes(x = 2, y = intercept + beta1, size = 1), color = "blue") +
   geom_point(aes(x = 3, y = intercept + beta2, size = 1), color = "blue")
