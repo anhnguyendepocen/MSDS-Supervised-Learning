@@ -48,3 +48,17 @@ ggplotRegression <- function(fit) {
 # Data of interest
 
 data.nutrition <- as.data.table(read.csv(file = "NutritionStudy.csv", head = TRUE, sep = ","))
+
+ggplot(data.nutrition, aes(Fiber, Cholesterol)) +
+  geom_point()
+
+cor(data.nutrition$Cholesterol, data.nutrition$Fiber)
+
+model1_fit <- lm(formula = Cholesterol ~ Fiber, data = data.nutrition)
+summary(model1_fit)
+anova(model1_fit)
+
+ggplotRegression(model1_fit)
+
+
+summary(model1_fit)$r.squared * 100
