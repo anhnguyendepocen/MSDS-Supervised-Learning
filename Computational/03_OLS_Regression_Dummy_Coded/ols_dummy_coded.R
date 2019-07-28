@@ -163,22 +163,14 @@ ggplot(model4_data, aes(VitaminUse, Cholesterol)) +
 
 tapply(data.nutrition$Cholesterol, data.nutrition$VitaminUse, mean)
 
-data.nutrition$VitaminRegular <- ifelse(data.nutrition$VitaminUse == "Regular", 1, -1)
-data.nutrition$VitaminOccasional <- ifelse(data.nutrition$VitaminUse == "Occasional", 1, -1)
-
-model5_fit <- lm(formula = Cholesterol ~ VitaminOccasional + VitaminRegular, data = data.nutrition)
-
-summary(model5_fit)
-anova(model5_fit)
-coef(model5_fit)
 
 data.nutrition$Vitamin <- as.factor(data.nutrition$VitaminUse)
 contrasts(data.nutrition$Vitamin) = matrix(c(-1, 1, 0, -1, 0, 1), ncol = 2) # contr.sum(3)
 contrasts(data.nutrition$Vitamin)
-model5a_fit <- lm(Cholesterol ~ Vitamin, data.nutrition)
-summary(model5a_fit)
+model5_fit <- lm(Cholesterol ~ Vitamin, data.nutrition)
+summary(model5_fit)
 
-coef(model5a_fit)
+coef(model5_fit)
 
 summary(model5_fit)$r.squared * 100
 
@@ -207,11 +199,9 @@ ggplot(data.nutrition, aes(VitaminUse, Cholesterol, fill = VitaminUse)) +
 data.nutrition$AlcoholUse <- ifelse(data.nutrition$Alcohol == 0, "None", ifelse(data.nutrition$Alcohol < 10, "Moderate", "Heavy"))
 data.nutrition$AlcoholUse <- factor(data.nutrition$AlcoholUse, labels = c("Heavy", "Moderate", "None"))
 levels(data.nutrition$AlcoholUse) <- c("None", "Moderate", "Heavy")
+contrasts(data.nutrition$AlcoholUse) = matrix(c(-1, 1, 0, -1, 0, 1), ncol = 2)
 
-data.nutrition$AlcoholModerate <- ifelse(data.nutrition$AlcoholUse == "Moderate", 1, -1)
-data.nutrition$AlcoholHeavy <- ifelse(data.nutrition$AlcoholUse == "Heavy", 1, -1)
-
-model6_fit <- lm(formula = Cholesterol ~ AlcoholModerate + AlcoholHeavy, data = data.nutrition)
+model6_fit <- lm(formula = Cholesterol ~ AlcoholUse, data = data.nutrition)
 summary(model6_fit)
 
 tapply(data.nutrition$Cholesterol, data.nutrition$AlcoholUse, mean)

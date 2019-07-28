@@ -73,9 +73,7 @@ summary(model1_fit)$r.squared * 100
 data.nutrition$AlcoholUse <- ifelse(data.nutrition$Alcohol == 0, "None", ifelse(data.nutrition$Alcohol < 10, "Moderate", "Heavy"))
 data.nutrition$AlcoholUse <- factor(data.nutrition$AlcoholUse, labels = c("Heavy", "Moderate", "None"))
 levels(data.nutrition$AlcoholUse) <- c("None", "Moderate", "Heavy")
-
-data.nutrition$AlcoholModerate <- ifelse(data.nutrition$AlcoholUse == "Moderate", 1, -1)
-data.nutrition$AlcoholHeavy <- ifelse(data.nutrition$AlcoholUse == "Heavy", 1, -1)
+contrasts(data.nutrition$AlcoholUse) = matrix(c(-1, 1, 0, -1, 0, 1), ncol = 2)
 
 tapply(data.nutrition$Cholesterol, data.nutrition$AlcoholUse, mean)
 
@@ -83,10 +81,11 @@ alcohol <- model.matrix(~AlcoholUse, data = data.nutrition)
 
 head(alcohol)
 
-model2_data <- data.table(Cholesterol = data.nutrition$Cholesterol, AlcoholUse = data.nutrition$AlcoholUse, alcholol[, 2], Fiber = data.nutrition$Fiber)
+model2_data <- data.table(Cholesterol = data.nutrition$Cholesterol, AlcoholUse = data.nutrition$AlcoholUse, alcholol[,2:3], alcholol$AlcoholUseHeavy, Fiber = data.nutrition$Fiber)
 
 model2_fit <- lm(formula = Cholesterol ~ AlcoholUse + Fiber, data = model2_data)
 summary(model2_fit)
 anova(model2_fit)
 
 ggplotRegression(model2_fit)
+
