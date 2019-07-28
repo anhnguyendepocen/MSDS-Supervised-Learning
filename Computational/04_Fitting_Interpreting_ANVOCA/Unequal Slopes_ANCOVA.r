@@ -1,9 +1,15 @@
 library(lessR)
-mydata<-data.frame(ANCOVA_Example_confederate)
+library(readxl)
+
+path.work <- "E:/GitHub/MSDS-RegressionAnalysis/data"
+path.home <- "D:/Projects/MSDS-RegressionAnalysis/data"
+
+ex_conf <- read_excel("ANCOVA Example_confederate.xlsx")
+
+mydata<-data.frame(ex_conf)
 mydata
 
 Plot(anxiety, diff, by=group, fit=TRUE, data=mydata)
-
 
 y<-mydata$diff
 x<-mydata$anxiety
@@ -15,6 +21,8 @@ d4<-mydata$d_4
 anx2<-x*d2
 anx3<-x*d3
 anx4<-x*d4
+
+contrasts(factor) <- contr.sum(3)
 
 ######  Test for Interaction - UNEQUAL Slopes  #####
 ###### Full Model
