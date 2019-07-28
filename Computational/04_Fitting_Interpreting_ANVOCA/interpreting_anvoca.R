@@ -81,9 +81,10 @@ alcohol <- model.matrix(~AlcoholUse, data = data.nutrition)
 
 head(alcohol)
 
-model2_data <- data.table(Cholesterol = data.nutrition$Cholesterol, AlcoholUse = data.nutrition$AlcoholUse, alcholol[,2:3], alcholol$AlcoholUseHeavy, Fiber = data.nutrition$Fiber)
+model2_data <- data.table(Cholesterol = data.nutrition$Cholesterol, AlcoholUse = data.nutrition$AlcoholUse, alcohol[, 2:3], Fiber = data.nutrition$Fiber)
 
 model2_fit <- lm(formula = Cholesterol ~ AlcoholUse + Fiber, data = model2_data)
+model2_fit <- lm(formula = Cholesterol ~ AlcoholUseModerate + AlcoholUseHeavy + Fiber, data = model2_data)
 summary(model2_fit)
 anova(model2_fit)
 
