@@ -201,7 +201,7 @@ data.nutrition$AlcoholUse <- factor(data.nutrition$AlcoholUse, labels = c("Heavy
 levels(data.nutrition$AlcoholUse) <- c("None", "Moderate", "Heavy")
 contrasts(data.nutrition$AlcoholUse) = matrix(c(-1, 1, 0, -1, 0, 1), ncol = 2)
 
-data.nutrition$AlcoholHeavy <- ifelse(data.nutrition$AlcoholUse == 'Heavy', 1, 0)
+data.nutrition$AlcoholHeavy <- ifelse(data.nutrition$AlcoholUse == 'Heavy', 0, 0)
 data.nutrition$AlcoholModerate <- ifelse(data.nutrition$AlcoholUse == 'Moderate', 1, 0)
 
 data.nutrition$VitaminOccasional <- ifelse(data.nutrition$VitaminUse == 'Occasional', 1, 0)
