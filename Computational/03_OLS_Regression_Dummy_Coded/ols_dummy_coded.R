@@ -201,6 +201,12 @@ data.nutrition$AlcoholUse <- factor(data.nutrition$AlcoholUse, labels = c("Heavy
 levels(data.nutrition$AlcoholUse) <- c("None", "Moderate", "Heavy")
 contrasts(data.nutrition$AlcoholUse) = matrix(c(-1, 1, 0, -1, 0, 1), ncol = 2)
 
+data.nutrition$AlcoholHeavy <- ifelse(data.nutrition$AlcoholUse == 'Heavy', 1, 0)
+data.nutrition$AlcoholModerate <- ifelse(data.nutrition$AlcoholUse == 'Moderate', 1, 0)
+
+data.nutrition$VitaminOccasional <- ifelse(data.nutrition$VitaminUse == 'Occasional', 1, 0)
+data.nutrition$VitaminRegular <- ifelse(data.nutrition$VitaminUse == 'Regular', 1, 0)
+
 model6_fit <- lm(formula = Cholesterol ~ AlcoholUse, data = data.nutrition)
 summary(model6_fit)
 
@@ -295,3 +301,4 @@ f.val > f.crit
 
 anova(full_fit, reduced_fit)
 
+partial_f_test(full_fit, reduced_fit)
