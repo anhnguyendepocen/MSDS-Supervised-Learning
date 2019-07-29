@@ -135,7 +135,10 @@ model3_data$FiberHeavy <- model3_data$Fiber * model3_data$AlcoholUseHeavy
 
 model3_fit <- lm(formula = Cholesterol ~ Fiber + AlcoholUseModerate + AlcoholUseHeavy + FiberModerate + FiberHeavy, data = model3_data)
 summary(model3_fit)
-coef(model3_fit)
+
+round(coef(model3_fit), 4)
+
+round(summary(model3_fit)$r.squared, 4) * 100
 
 model3_data$pred <- predict(model3_fit)
 
@@ -145,3 +148,8 @@ ggplot(model3_data) +
 
 ggplot(model3_data, aes(Fiber, Cholesterol, color = AlcoholUse)) +
   geom_point()
+
+partial_f_test(model3_fit, model2_fit)
+
+anova(model3_fit, model2_fit)
+
