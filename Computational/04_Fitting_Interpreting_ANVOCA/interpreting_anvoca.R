@@ -151,5 +151,39 @@ ggplot(model3_data, aes(Fiber, Cholesterol, color = AlcoholUse)) +
 
 partial_f_test(model3_fit, model2_fit)
 
+m1_aov <- anova(model3_fit)
+m2_aov <- anova(model2_fit)
+
+df_1 <- 4
+df_2 <- 2
+
+ss_f <- m1_aov$`Sum Sq`[length(m1_aov$`Sum Sq`)]
+ss_r <- m2_aov$`Sum Sq`[length(m2_aov$`Sum Sq`)]
+msf <- sum(m1_aov$`Mean Sq`)
+
+n <- nrow(data.nutrition)
+
+k <- 4
+p <- 8
+
+f.val <- ((ss_r - ss_f) / k) / (ss_f / (n - (p + 1)))
+round(f.val, 4)
+
+dff <- 306
+dfr <- 310
+dfn <- dfr - dff
+
+f.val <- ((ss_r - ss_f) / dfn) / (ss_f / dff)
+f.val
+
+alpha = .05
+f.crit <- qf(1 - alpha, dfn, dff)
+round(f.crit, 4)
+
+f.val > f.crit
+
+anova(full_fit, reduced_fit)
+
+
 anova(model3_fit, model2_fit)
 
