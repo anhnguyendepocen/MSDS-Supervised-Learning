@@ -248,7 +248,7 @@ model5_data$VitaminOccFiber <- model5_data$Fiber * model5_data$VitaminUseOccasio
 model5_data$VitaminRegFiber <- model5_data$Fiber * model5_data$VitaminUseRegular
 
 model5_fit <- lm(formula = Cholesterol ~ Fiber + VitaminUseOccasional + VitaminUseRegular + VitaminOccFiber + VitaminRegFiber, data = model5_data)
-summary(model5_data)
+summary(model5_fit)
 
 round(coef(model5_fit), 4)
 
@@ -259,3 +259,4 @@ model5_data$pred <- predict(model5_fit)
 GainCurvePlot(model5_data, "pred", "Cholesterol", "Cholesterol model")
 
 plot(model4_fit)
+
