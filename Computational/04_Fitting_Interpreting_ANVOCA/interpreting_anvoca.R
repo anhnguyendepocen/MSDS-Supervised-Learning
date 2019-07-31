@@ -207,6 +207,55 @@ alpha = .05
 f.crit <- qf(1 - alpha, dfn, dff)
 round(f.crit, 4)
 
-f.val > f.crit
+ifelse(f.val > f.crit, "Reject the Null", "Cannot reject the null")
 
 anova(model3_fit, model2_fit)
+
+partial_f_test(model3_fit, model2_fit)
+
+plot(model3_fit)
+
+# Smoke, Model 4
+
+smoke <- model.matrix(~Smoke, data = data.nutrition)
+
+head(smoke)
+
+model4_data <- data.table(Cholesterol = data.nutrition$Cholesterol, Smoke = data.nutrition$Smoke, SmokeYes = smoke[, 2], Fiber = data.nutrition$Fiber)
+model4_data$SmokeFiber <- model4_data$Fiber * model4_data$SmokeYes
+
+model4_fit <- lm(formula = Cholesterol ~ Fiber + Smoke + SmokeFiber, data = model4_data)
+summary(model4_fit)
+
+round(coef(model4_fit), 4)
+
+round(summary(model4_fit)$r.squared, 4) * 100
+
+model4_data$pred <- predict(model4_fit)
+
+GainCurvePlot(model4_data, "pred", "Cholesterol", "Cholesterol model")
+
+plot(model4_fit)
+
+# Vitamin, Model 5
+
+vitamin <- model.matrix(~VitaminUse, data = data.nutrition)
+
+head(vitamin)
+
+model5_data <- data.table(Cholesterol = data.nutrition$Cholesterol, Vitamin = data.nutrition$VitaminUse, vitamin[, 2:3], Fiber = data.nutrition$Fiber)
+model5_data$VitaminOccFiber <- model5_data$Fiber * model5_data$VitaminUseOccasional
+model5_data$VitaminRegFiber <- model5_data$Fiber * model5_data$VitaminUseRegular
+
+model5_fit <- lm(formula = Cholesterol ~ Fiber + VitaminUseOccasional + VitaminUseRegular + VitaminOccFiber + VitaminRegFiber, data = model5_data)
+summary(model5_data)
+
+round(coef(model5_fit), 4)
+
+round(summary(model5_fit)$r.squared, 4) * 100
+
+model5_data$pred <- predict(model5_fit)
+
+GainCurvePlot(model5_data, "pred", "Cholesterol", "Cholesterol model")
+
+plot(model4_fit)
