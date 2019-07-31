@@ -10,6 +10,9 @@ library(reshape2)
 library(skimr)
 library(gridExtra)
 library(lessR)
+library(broom)
+library(sigr)
+library(WVPlots)
 
 #####################################################################
 ######################### Assignment 4 ##############################
@@ -36,13 +39,22 @@ theme_update(plot.title = element_text(hjust = 0.5),
 # Utility
 
 ggplotRegression <- function(fit) {
-  ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) +
+  p1 <- ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) +
     geom_point() +
     stat_smooth(method = "lm", col = "red") +
     labs(title = paste("Adj R2 = ", signif(summary(fit)$adj.r.squared, 5),
                       "Intercept =", signif(fit$coef[[1]], 5),
                       " Slope =", signif(fit$coef[[2]], 5),
                       " P =", signif(summary(fit)$coef[2, 4], 5)))
+
+  res <- as.data.table(residuals(fit))
+  colnames(res) <- c("value")
+
+  p2 <- ggplot(res, aes(value, fill = ..count..)) +
+    geom_histogram(breaks = pretty(res$value)) +
+    labs(title = "Residuals")
+
+  grid.arrange(p1, p2)
 }
 
 # Data of interest
@@ -60,6 +72,14 @@ model1_fit <- lm(formula = Cholesterol ~ Fiber, data = data.nutrition)
 summary(model1_fit)
 anova(model1_fit)
 
+glance(model1_fit)
+wrapFTest(model1_fit)
+
+mean(data.nutrition$Cholesterol)
+mean(data.nutrition$Fiber)
+
+193.701 + 12.78857 * 3.813
+
 ggplotRegression(model1_fit)
 
 coef(model1_fit)
@@ -73,9 +93,8 @@ summary(model1_fit)$r.squared * 100
 # Dummy Coded Alcohol
 
 data.nutrition$AlcoholUse <- ifelse(data.nutrition$Alcohol == 0, "None", ifelse(data.nutrition$Alcohol < 10, "Moderate", "Heavy"))
-data.nutrition$AlcoholUse <- factor(data.nutrition$AlcoholUse, labels = c("Heavy", "Moderate", "None"))
+data.nutrition$AlcoholUse <- factor(data.nutrition$AlcoholUse, labels = c("Heavy", "Moderate", "None"), levels = )
 levels(data.nutrition$AlcoholUse) <- c("None", "Moderate", "Heavy")
-contrasts(data.nutrition$AlcoholUse) = matrix(c(-1, 1, 0, -1, 0, 1), ncol = 2)
 
 tapply(data.nutrition$Cholesterol, data.nutrition$AlcoholUse, mean)
 
@@ -90,15 +109,18 @@ alcohol <- model.matrix(~AlcoholUse, data = data.nutrition)
 
 head(alcohol)
 
-model2_data <- data.table(Cholesterol = data.nutrition$Cholesterol, alcohol[, 2:3], Fiber = data.nutrition$Fiber)
+contrasts(data.nutrition$AlcoholUse) = matrix(c(-1, 1, 0, -1, 0, 1), ncol = 2)
 
-round(summary(model2_fit)$r.squared * 100, 4)
-
+model2_data <- data.table(Cholesterol = data.nutrition$Cholesterol, AlcoholUse = data.nutrition$AlcoholUse, alcohol[, 2:3], Fiber = data.nutrition$Fiber)
 model2_fit <- lm(formula = Cholesterol ~ Fiber + AlcoholUseModerate + AlcoholUseHeavy, data = model2_data)
+
 summary(model2_fit)
 anova(model2_fit)
 
+round(summary(model2_fit)$r.squared * 100, 4)
 round(coef(model2_fit), 4)
+
+ggplotRegression(model2_fit)
 
 ggplot(model2_fit$model, aes_string(x = names(model2_fit$model)[2], y = names(model2_fit$model)[1])) +
     geom_point() +
@@ -119,10 +141,12 @@ c(beta1 - alpha1, beta1 + alpha1)
 crit.value <- abs(qt(alpha1 / 2, 72 - 4 - 2)) # 99% confidence, 2 sided
 round(crit.value, 4)
 
-data.nutrition$y_hat <- predict(model2_fit)
+model2_data$pred <- predict(model2_fit)
 
-ggplot(data.nutrition, aes(Fiber, y_hat, color = AlcoholUse)) +
+ggplot(model2_data, aes(Fiber, pred, color = AlcoholUse)) +
   geom_point()
+
+GainCurvePlot(model2_data, "pred", "Cholesterol", "Cholesterol model")
 
 ggplot(data.nutrition, aes(Fiber, Cholesterol, color = AlcoholUse)) +
   geom_point()
@@ -142,6 +166,8 @@ round(summary(model3_fit)$r.squared, 4) * 100
 
 model3_data$pred <- predict(model3_fit)
 
+GainCurvePlot(model3_data, "pred", "Cholesterol", "Cholesterol model")
+
 ggplot(model3_data) +
   geom_point(aes(Fiber, pred, color = AlcoholUse)) +
   geom_point(aes(Fiber, Cholesterol, color = AlcoholUse, alpha = .5))
@@ -158,23 +184,24 @@ df_1 <- 4
 df_2 <- 2
 
 ss_f <- m1_aov$`Sum Sq`[length(m1_aov$`Sum Sq`)]
+
 ss_r <- m2_aov$`Sum Sq`[length(m2_aov$`Sum Sq`)]
 msf <- sum(m1_aov$`Mean Sq`)
 
 n <- nrow(data.nutrition)
 
-k <- 4
-p <- 8
+k <- 3
+p <- 5
 
 f.val <- ((ss_r - ss_f) / k) / (ss_f / (n - (p + 1)))
 round(f.val, 4)
 
-dff <- 306
-dfr <- 310
+dff <- 309
+dfr <- 311
 dfn <- dfr - dff
 
 f.val <- ((ss_r - ss_f) / dfn) / (ss_f / dff)
-f.val
+round(f.val, 4)
 
 alpha = .05
 f.crit <- qf(1 - alpha, dfn, dff)
@@ -182,8 +209,4 @@ round(f.crit, 4)
 
 f.val > f.crit
 
-anova(full_fit, reduced_fit)
-
-
 anova(model3_fit, model2_fit)
-

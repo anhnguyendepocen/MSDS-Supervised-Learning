@@ -51,3 +51,9 @@ install.packages('rlang', dependencies = TRUE)
 install.packages('lessR', dependencies = TRUE)
 install.packages('zip', dependencies = TRUE)
 install.packages('V8', dependencies = TRUE)
+install.packages('dplyr', dependencies = TRUE)
+
+install.packages('broom', dependencies = TRUE)
+install.packages('sigr', dependencies = TRUE)
+install.packages('WVPlots', dependencies = TRUE)
+
