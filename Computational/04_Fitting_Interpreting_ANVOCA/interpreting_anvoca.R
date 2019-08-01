@@ -9,10 +9,9 @@ library(scales)
 library(reshape2)
 library(skimr)
 library(gridExtra)
-library(lessR)
-library(broom)
-library(sigr)
-library(WVPlots)
+library(caret)
+library(sjPlot)
+library(sjmisc)
 
 #####################################################################
 ######################### Assignment 4 ##############################
@@ -27,7 +26,7 @@ if (file.exists(path.home)) {
   setwd(path.work)
 }
 
-theme_set(theme_light())
+theme_set(theme_sjplot())
 
 # Theme Overrides
 theme_update(plot.title = element_text(hjust = 0.5),
@@ -154,50 +153,25 @@ ggplot(data.nutrition, aes(Fiber, Cholesterol, color = AlcoholUse)) +
 # Model 3
 
 model3_data <- data.table(Cholesterol = data.nutrition$Cholesterol, AlcoholUse = data.nutrition$AlcoholUse, alcohol[, 2:3], Fiber = data.nutrition$Fiber)
-model3_data$FiberModerate <- model3_data$Fiber * model3_data$AlcoholUseModerate
-model3_data$FiberHeavy <- model3_data$Fiber * model3_data$AlcoholUseHeavy
-
-model3_fit <- lm(formula = Cholesterol ~ Fiber + AlcoholUseModerate + AlcoholUseHeavy + FiberModerate + FiberHeavy, data = model3_data)
+model3_fit <- lm(formula = Cholesterol ~ Fiber + AlcoholUseModerate + AlcoholUseHeavy + Fiber * AlcoholUseModerate + Fiber * AlcoholUseHeavy, data = model3_data)
 summary(model3_fit)
 
 round(coef(model3_fit), 4)
 
 round(summary(model3_fit)$r.squared, 4) * 100
 
-model3_data$pred <- predict(model3_fit)
-
-GainCurvePlot(model3_data, "pred", "Cholesterol", "Cholesterol model")
-
-ggplot(model3_data) +
-  geom_point(aes(Fiber, pred, color = AlcoholUse)) +
-  geom_point(aes(Fiber, Cholesterol, color = AlcoholUse, alpha = .5))
-
-ggplot(model3_data, aes(Fiber, Cholesterol, color = AlcoholUse)) +
-  geom_point()
-
-partial_f_test(model3_fit, model2_fit)
+plot_model(model3_fit, type = "int")
 
 m1_aov <- anova(model3_fit)
 m2_aov <- anova(model2_fit)
-
-df_1 <- 4
-df_2 <- 2
 
 ss_f <- m1_aov$`Sum Sq`[length(m1_aov$`Sum Sq`)]
 
 ss_r <- m2_aov$`Sum Sq`[length(m2_aov$`Sum Sq`)]
 msf <- sum(m1_aov$`Mean Sq`)
 
-n <- nrow(data.nutrition)
-
-k <- 3
-p <- 5
-
-f.val <- ((ss_r - ss_f) / k) / (ss_f / (n - (p + 1)))
-round(f.val, 4)
-
-dff <- 309
-dfr <- 311
+dff <- m1_aov$Df[length(m1_aov$Df)]
+dfr <- m2_aov$Df[length(m2_aov$Df)]
 dfn <- dfr - dff
 
 f.val <- ((ss_r - ss_f) / dfn) / (ss_f / dff)
@@ -211,52 +185,44 @@ ifelse(f.val > f.crit, "Reject the Null", "Cannot reject the null")
 
 anova(model3_fit, model2_fit)
 
-partial_f_test(model3_fit, model2_fit)
+# plot(model3_fit)
 
-plot(model3_fit)
+# Fiber/Smoke, Model 4
 
-# Smoke, Model 4
+smoke <- dummyVars(Cholesterol ~ Fiber + Smoke + Fiber*Smoke, data = data.nutrition)
 
-smoke <- model.matrix(~Smoke, data = data.nutrition)
-
-head(smoke)
-
-model4_data <- data.table(Cholesterol = data.nutrition$Cholesterol, Smoke = data.nutrition$Smoke, SmokeYes = smoke[, 2], Fiber = data.nutrition$Fiber)
-model4_data$SmokeFiber <- model4_data$Fiber * model4_data$SmokeYes
-
-model4_fit <- lm(formula = Cholesterol ~ Fiber + Smoke + SmokeFiber, data = model4_data)
+model4_fit <- lm(smoke, data = data.nutrition)
 summary(model4_fit)
 
 round(coef(model4_fit), 4)
 
 round(summary(model4_fit)$r.squared, 4) * 100
 
-model4_data$pred <- predict(model4_fit)
+plot_model(model4_fit, type = "int")
 
-GainCurvePlot(model4_data, "pred", "Cholesterol", "Cholesterol model")
+# Fiber/Vitamin, Model 5
 
-plot(model4_fit)
+vitamin <- dummyVars(Cholesterol ~ Fiber + VitaminUse + Fiber*VitaminUse, data = data.nutrition)
 
-# Vitamin, Model 5
-
-vitamin <- model.matrix(~VitaminUse, data = data.nutrition)
-
-head(vitamin)
-
-model5_data <- data.table(Cholesterol = data.nutrition$Cholesterol, Vitamin = data.nutrition$VitaminUse, vitamin[, 2:3], Fiber = data.nutrition$Fiber)
-model5_data$VitaminOccFiber <- model5_data$Fiber * model5_data$VitaminUseOccasional
-model5_data$VitaminRegFiber <- model5_data$Fiber * model5_data$VitaminUseRegular
-
-model5_fit <- lm(formula = Cholesterol ~ Fiber + VitaminUseOccasional + VitaminUseRegular + VitaminOccFiber + VitaminRegFiber, data = model5_data)
+model5_fit <- lm(vitamin, data = data.nutrition)
 summary(model5_fit)
 
 round(coef(model5_fit), 4)
 
 round(summary(model5_fit)$r.squared, 4) * 100
 
-model5_data$pred <- predict(model5_fit)
+plot_model(model5_fit, type = "int")
 
-GainCurvePlot(model5_data, "pred", "Cholesterol", "Cholesterol model")
+# Model 6, Fiber/Gender
 
-plot(model4_fit)
+gender <- dummyVars(Cholesterol ~ Fiber + Gender + Fiber*Gender, data = data.nutrition)
+
+model6_fit <- lm(gender, data = data.nutrition)
+summary(model6_fit)
+
+round(coef(model6_fit), 4)
+
+round(summary(model6_fit)$r.squared, 4) * 100
+
+plot_model(model6_fit, type = "int")
 
