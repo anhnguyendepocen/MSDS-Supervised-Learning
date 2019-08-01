@@ -12,6 +12,8 @@ library(gridExtra)
 library(caret)
 library(sjPlot)
 library(sjmisc)
+library(car)
+library(WVPlots)
 
 #####################################################################
 ######################### Assignment 4 ##############################
@@ -114,7 +116,7 @@ model2_data <- data.table(Cholesterol = data.nutrition$Cholesterol, AlcoholUse =
 model2_fit <- lm(formula = Cholesterol ~ Fiber + AlcoholUseModerate + AlcoholUseHeavy, data = model2_data)
 
 summary(model2_fit)
-anova(model2_fit)
+Anova(model2_fit, type = "II")
 
 round(summary(model2_fit)$r.squared * 100, 4)
 round(coef(model2_fit), 4)
@@ -192,6 +194,7 @@ anova(model3_fit, model2_fit)
 smoke <- dummyVars(Cholesterol ~ Fiber + Smoke + Fiber*Smoke, data = data.nutrition)
 
 model4_fit <- lm(smoke, data = data.nutrition)
+Anova(model4_fit, type = "II")
 summary(model4_fit)
 
 round(coef(model4_fit), 4)
@@ -206,6 +209,7 @@ vitamin <- dummyVars(Cholesterol ~ Fiber + VitaminUse + Fiber*VitaminUse, data =
 
 model5_fit <- lm(vitamin, data = data.nutrition)
 summary(model5_fit)
+Anova(model5_fit, type = "II")
 
 round(coef(model5_fit), 4)
 
@@ -219,10 +223,30 @@ gender <- dummyVars(Cholesterol ~ Fiber + Gender + Fiber*Gender, data = data.nut
 
 model6_fit <- lm(gender, data = data.nutrition)
 summary(model6_fit)
-
+Anova(model6_fit)
 round(coef(model6_fit), 4)
 
 round(summary(model6_fit)$r.squared, 4) * 100
 
 plot_model(model6_fit, type = "int")
+
+# Bonus
+
+ggpairs(data.nutrition)
+
+bonus1 <- dummyVars(Cholesterol ~ Calories + Fat + Fiber + Gender + Fiber * Gender, data = data.nutrition)
+
+bonus1_fit <- lm(bonus1, data = data.nutrition)
+summary(bonus1_fit)
+Anova(bonus1_fit)
+
+plot_model(bonus1_fit, type = "pred", terms = c("Gender"))
+
+round(coef(bonus1_fit), 4)
+
+ggplotRegression(bonus1_fit)
+
+bonus1_data <- data.table( actual = data.nutrition$Cholesterol, pred = predict(bonus1_fit))
+
+GainCurvePlot(bonus1_data, "pred", "actual", "Predicted Cholesterol Levels")
 
