@@ -220,6 +220,7 @@ full_fit <- lm(formula = Cholesterol ~ AlcoholModerate + AlcoholHeavy + VitaminO
 summary(full_fit)
 anova(full_fit)
 
+
 reduced_fit <- lm(formula = Cholesterol ~ AlcoholModerate + AlcoholHeavy + VitaminOccasional + VitaminRegular, data = data.interaction)
 summary(reduced_fit)
 
@@ -300,5 +301,3 @@ round(f.crit, 4)
 f.val > f.crit
 
 anova(full_fit, reduced_fit)
-
-partial_f_test(full_fit, reduced_fit)

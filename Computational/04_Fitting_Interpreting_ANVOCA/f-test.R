@@ -23,6 +23,7 @@ partial_f_test <- function(full_mod, partial_mod, alpha = 0.05) {
   # Critical F
   n <- sum(full_anova$Df) + 1
   q_p <- sum(full_anova$Df[1:length(full_anova$Df) - 1])
+
   df2 <- n - q_p - 1
   critical_f <- round(qf(1 - alpha, s, df2), digits = 4)
 
