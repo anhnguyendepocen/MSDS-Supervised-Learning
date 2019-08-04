@@ -57,3 +57,9 @@ install.packages('broom', dependencies = TRUE)
 install.packages('sigr', dependencies = TRUE)
 install.packages('WVPlots', dependencies = TRUE)
 
+install.packages('sjPlot', dependencies = TRUE)
+install.packages('sjmisc', dependencies = TRUE)
+install.packages('car', dependencies = TRUE)
+
+install.packages('lattice', dependencies = TRUE)
+

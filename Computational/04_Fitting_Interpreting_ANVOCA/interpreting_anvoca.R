@@ -55,7 +55,7 @@ ggplotRegression <- function(fit) {
     geom_histogram(breaks = pretty(res$value)) +
     labs(title = "Residuals")
 
-  grid.arrange(p1, p2)
+  grid.arrange(p1, p2, nrow = 1)
 }
 
 # Data of interest
@@ -78,6 +78,7 @@ wrapFTest(model1_fit)
 
 mean(data.nutrition$Cholesterol)
 mean(data.nutrition$Fiber)
+
 
 193.701 + 12.78857 * 3.813
 
@@ -250,3 +251,81 @@ bonus1_data <- data.table( actual = data.nutrition$Cholesterol, pred = predict(b
 
 GainCurvePlot(bonus1_data, "pred", "actual", "Predicted Cholesterol Levels")
 
+summary(data.nutrition)
+
+b0 <- 242.5
+
+b1 <- 0.04305
+
+b0 + b1 * 1796.7
+
+tapply(data.nutrition$Cholesterol, data.nutrition$Gender, mean)
+
+# calories + gender
+
+calories_gender <- dummyVars(Cholesterol ~ Calories + Gender + Calories * Gender, data = data.nutrition)
+
+model7_fit <- lm(calories_gender, data = data.nutrition)
+summary(model7_fit)
+Anova(model7_fit)
+round(coef(model7_fit), 4)
+
+round(summary(model7_fit)$r.squared, 4) * 100
+
+plot_model(model7_fit, type = "int")
+
+# fat + gender
+
+fat_gender <- dummyVars(Cholesterol ~ Fat + Gender + Fat * Gender, data = data.nutrition)
+
+model8_fit <- lm(fat_gender, data = data.nutrition)
+summary(model8_fit)
+Anova(model8_fit)
+round(coef(model8_fit), 4)
+
+round(summary(model7_fit)$r.squared, 4) * 100
+
+plot_model(model8_fit, type = "int")
+
+# Bonus 2
+
+bonus2 <- dummyVars(Cholesterol ~ Calories + Fat + Fiber + Gender + Fiber * Gender + Calories * Gender, data = data.nutrition)
+
+bonus2_fit <- lm(bonus2, data = data.nutrition)
+summary(bonus2_fit)
+Anova(bonus2_fit)
+
+plot_model(bonus2_fit, type = "pred", terms = c("Gender"))
+
+round(coef(bonus1_fit), 4)
+
+ggplotRegression(bonus2_fit)
+
+bonus2_data <- data.table(actual = data.nutrition$Cholesterol, pred = predict(bonus2_fit))
+
+GainCurvePlot(bonus2_data, "pred", "actual", "Predicted Cholesterol Levels")
+
+# F-test
+
+m1_aov <- anova(bonus2_fit)
+m2_aov <- anova(bonus1_fit)
+
+ss_f <- m1_aov$`Sum Sq`[length(m1_aov$`Sum Sq`)]
+
+ss_r <- m2_aov$`Sum Sq`[length(m2_aov$`Sum Sq`)]
+msf <- sum(m1_aov$`Mean Sq`)
+
+dff <- m1_aov$Df[length(m1_aov$Df)]
+dfr <- m2_aov$Df[length(m2_aov$Df)]
+dfn <- dfr - dff
+
+f.val <- ((ss_r - ss_f) / dfn) / (ss_f / dff)
+round(f.val, 4)
+
+alpha = .05
+f.crit <- qf(1 - alpha, dfn, dff)
+round(f.crit, 4)
+
+ifelse(f.val > f.crit, "Reject the Null", "Cannot reject the null")
+
+anova(bonus2_fit, bonus1_fit)
