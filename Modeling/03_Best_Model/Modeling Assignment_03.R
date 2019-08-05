@@ -102,15 +102,18 @@ getCategoryRelationships <- function(data, response) {
   catCols <- names(data)[sapply(data, is.factor)]
   print(length(catCols))
 
-  results <- data.table( Column = character(), RSq = numeric(), RSE = numeric(), Levels = numeric(), PctPopulated = numeric())
+  results <- data.table( Column = character(), RSq = numeric(), RSE = numeric(), MeanDiff = numeric(), Levels = numeric(), PctPopulated = numeric())
 
   for (col in catCols) {
 
     tryCatch({
       fmla <- as.formula(paste0(response, " ~ ", col))
       fit <- lm(fmla, data)
-      pct_value <- (1 - sum(is.na(data[[col]])) / nrow(data)) * 100
-      ret <- data.table(Column = col, RSq = summary(fit)$r.squared, RSE = sd(residuals(fit)), Levels = length(coef(fit)), PctPopulated = pct_value)
+      pct_value <- round((1 - sum(is.na(data[[col]])) / nrow(data)) * 100, 1)
+      vals <- data.table(value = tapply(data.model[[response]], data.model[[col]], mean))
+      mean.diff <- mean(vals[!is.na(value)]$value)
+
+      ret <- data.table(Column = col, RSq = round(summary(fit)$r.squared * 100, 2), RSE = dollar(sd(residuals(fit))), MeanDiff = dollar(mean.diff), Levels = length(coef(fit)), PctPopulated = pct_value)
   
       results <- rbind(results, ret, use.names = T)
     }, error = function(e) {
@@ -118,22 +121,22 @@ getCategoryRelationships <- function(data, response) {
     })
   }
 
-  setorder(results, - RSq, RSE, PctPopulated)
+  setorder(results, - RSq, RSE, PctPopulated, MeanDiff)
   results
 }
 
 cat.relationships <- getCategoryRelationships(data.model, "SalePrice")
 
-formattable(cat.relationships, align = c("l", "c", "c", "c", "r"),
+formattable(cat.relationships, align = c("l", "c", "c", "c", "c", "r"),
   list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
 ))
 
-category_model <- function(col, data) {
+category_model <- function(col, data, response) {
 
   data <- data.model[, SalePrice, by = c(col)]
   print(summary(data))
 
-  fmla <- as.formula(paste0("SalePrice ~ ", col))
+  fmla <- as.formula(paste0(response, " ~ ", col))
   category <- dummyVars(fmla, data = data)
 
   model_fit <- lm(category, data = data)
@@ -144,17 +147,16 @@ category_model <- function(col, data) {
   plot_model(model_fit, type = "pred")
 }
 
-category_model("MiscFeature", data.model)
-tapply(data.model$SalePrice, data.model$MiscFeature, mean)
+category_model("Neighborhood", data.model, "SalePrice")
 
-category_model("Neighborhood", data.model)
+category_model("Neighborhood", data.model, "SalePrice")
 tapply(data.model$SalePrice, data.model$Neighborhood, mean)
 
-category_model("Fence", data.model)
-category_model("BsmtQual", data.model)
+category_model("Fence", data.model, "SalePrice")
+category_model("BsmtQual", data.model, "SalePrice")
 
-category_model("PoolQC", data.model)
-category_model("KitchenQual", data.model)
-category_model("ExterQual", data.model)
-category_model("Foundation", data.model)
+category_model("PoolQC", data.model, "SalePrice")
+category_model("KitchenQual", data.model, "SalePrice")
+category_model("ExterQual", data.model, "SalePrice")
+category_model("Foundation", data.model, "SalePrice")
 
