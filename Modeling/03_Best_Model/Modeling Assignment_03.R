@@ -41,6 +41,15 @@ theme_update(plot.title = element_text(hjust = 0.5),
              axis.title = element_text(face = "bold", size = 12, colour = "steelblue4"),
              legend.position = "top", legend.title = element_blank())
 
+# Utility Function
+g_legend <- function(a.gplot) {
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+
+
 data.housing <- as.data.table(read.csv(file = "ames_housing_data.csv", head = TRUE, sep = ","))
 
 # Basic Data Structure
@@ -147,16 +156,62 @@ category_model <- function(col, data, response) {
   plot_model(model_fit, type = "pred")
 }
 
-category_model("Neighborhood", data.model, "SalePrice")
+# Neighborhood
 
 category_model("Neighborhood", data.model, "SalePrice")
-tapply(data.model$SalePrice, data.model$Neighborhood, mean)
 
-category_model("Fence", data.model, "SalePrice")
+neighborhood.mean <- melt(tapply(data.model$SalePrice, data.model$Neighborhood, mean))
+colnames(neighborhood.mean) <- c("Neighborhood", "MeanPrice")
+neighborhood.mean <- neighborhood.mean[!is.na(neighborhood.mean$MeanPrice),]
+
+neighborhood.mean$MeanPrice <- dollar(neighborhood.mean$MeanPrice)
+
+formattable(neighborhood.mean, align = c("l", "r"),
+  list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+))
+
+ggplot(data.model) +
+  geom_boxplot(aes(x = Neighborhood, y = SalePrice, fill = Neighborhood)) +
+  coord_flip() +
+  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
+  theme(legend.position = "bottom")
+
+# Basement Quality
+
+ggplot(data.model) +
+  geom_boxplot(aes(x = BsmtQual, y = SalePrice, fill = BsmtQual)) +
+  coord_flip() +
+  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
+  theme(legend.position = "bottom")
+
 category_model("BsmtQual", data.model, "SalePrice")
 
-category_model("PoolQC", data.model, "SalePrice")
+# Kitchen Qual
 category_model("KitchenQual", data.model, "SalePrice")
+
+ggplot(data.model) +
+  geom_boxplot(aes(x = KitchenQual, y = SalePrice, fill = KitchenQual)) +
+  coord_flip() +
+  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
+  theme(legend.position = "bottom")
+
+# Exterior Qual
+category_model("ExterQual", data.model, "SalePrice")
+
+ggplot(data.model) +
+  geom_boxplot(aes(x = ExterQual, y = SalePrice, fill = ExterQual)) +
+  coord_flip() +
+  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
+  theme(legend.position = "bottom")
+
+# Fence
+category_model("Fence", data.model, "SalePrice")
+
+category_model("PoolQC", data.model, "SalePrice")
 category_model("ExterQual", data.model, "SalePrice")
 category_model("Foundation", data.model, "SalePrice")
+
+
+category_model("HeatingQC", data.model, "SalePrice")
+category_model("GarageType", data.model, "SalePrice")
 
