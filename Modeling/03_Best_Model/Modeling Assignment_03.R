@@ -20,16 +20,16 @@ library(WVPlots)
 library(MASS)
 
 #####################################################################
-######################### Assignment 3 ##############################
+######################### Modeling 3 ################################
 #####################################################################
 
-path.work <- "E:/GitHub/MSDS-RegressionAnalysis/data"
-path.home <- "D:/Projects/MSDS-RegressionAnalysis/data"
+path.w <- "E:/GitHub/MSDS-RegressionAnalysis/data"
+path.h <- "D:/Projects/MSDS-RegressionAnalysis/data"
 
-if (file.exists(path.home)) {
-  setwd(path.home)
+if (file.exists(path.h)) {
+  setwd(path.h)
 } else {
-  setwd(path.work)
+  setwd(path.w)
 }
 
 theme_set(theme_light())
@@ -62,58 +62,16 @@ summary(data.housing)
 
 # Data Survey
 
-ggplot(data.housing) +
-  geom_histogram(aes(data.housing$Price_Sqft, fill = ..count..), breaks = pretty(data.housing$Price_Sqft)) +
-  labs(x = "Price / Sqft", y = "Count")
-
 housing.numeric.col <- unlist(lapply(data.housing, is.numeric))
 data.housing.numeric <- data.housing[, housing.numeric.col, with = F]
 
 str(data.housing.numeric)
-
-# getCorTable(data.housing.numeric)
-
 skim(data.housing)
-
-# Data Exploration
-
-ggplot(data.housing) +
-  geom_boxplot(aes(x = SaleType, y = SalePrice, fill = Neighborhood)) +
-  coord_flip() +
-  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
-  theme(legend.position = "bottom")
-
-ggplot(data.housing) +
-  geom_boxplot(aes(x = Zoning, y = SalePrice, fill = SaleCondition)) +
-  coord_flip() +
-  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
-  theme(legend.position = "bottom")
-
-ggplot(data.housing) +
-  geom_histogram(aes(data.housing$MasVnrArea, fill = ..count..), breaks = pretty(data.housing$MasVnrArea)) +
-  labs(x = "Price / Sqft", y = "Count")
-
-summary(data.housing$MasVnrArea)
-
-missing.masvnr <- data.housing[is.na(data.housing$MasVnrArea)]
-
-ggplot(missing.masvnr) +
-  geom_histogram(aes(missing.masvnr$SalePrice, fill = ..count..), breaks = pretty(missing.masvnr$SalePrice)) +
-  labs(x = "Price / Sqft", y = "Count") +
-  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
-  scale_x_continuous(labels = dollar_format(largest_with_cents = .2))
-
 
 # Drop Conditions
 
 data.cleaned <- data.housing
 data.clean.stats <- data.table(Step = "Baseline", Records = nrow(data.cleaned))
-
-ggplot(data.cleaned) +
-  geom_boxplot(aes(x = BldgType, y = SalePrice, fill = SaleCondition)) +
-  coord_flip() +
-  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
-  theme(legend.position = "bottom")
 
 data.cleaned <- data.housing[BldgType == "1Fam"]
 data.clean.stats <- rbind(data.clean.stats, data.table(Step = "BldgType", Records = nrow(data.cleaned)))
@@ -123,135 +81,59 @@ data.clean.stats <- rbind(data.clean.stats, data.table(Step = "BldgType", Record
 data.cleaned <- data.cleaned[!(Zoning %in% c("A (agr)", "I (all)", "C (all)"))]
 data.clean.stats <- rbind(data.clean.stats, data.table(Step = "Zoning", Records = nrow(data.cleaned)))
 
-unique(data.cleaned$Zoning)
-
-ggplot(data.cleaned) +
-  geom_boxplot(aes(x = Zoning, y = SalePrice, fill = SaleCondition)) +
-  coord_flip() +
-  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
-  theme(legend.position = "bottom")
-
 # Sale Condition
-
-skim(data.cleaned)
-
-ggplot(data.cleaned) +
-  geom_boxplot(aes(x = SaleCondition, y = SalePrice, fill = SaleCondition)) +
-  coord_flip() +
-  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
-  theme(legend.position = "bottom")
-
-unique(data.cleaned$SaleCondition)
 
 data.cleaned <- data.cleaned[!(SaleCondition %in% c("Abnorml"))]
 data.clean.stats <- rbind(data.clean.stats, data.table(Step = "Sale Condition", Records = nrow(data.cleaned)))
 
-ggplot(data.cleaned) +
-  geom_boxplot(aes(x = LotShape, y = SalePrice, fill = SaleCondition)) +
-  coord_flip() +
-  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
-  theme(legend.position = "bottom")
-
-ggplot(data.cleaned) +
-  geom_boxplot(aes(x = BsmtCond, y = SalePrice, fill = SaleCondition)) +
-  coord_flip() +
-  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
-  theme(legend.position = "bottom")
-
-ggplot(data.cleaned) +
-  geom_boxplot(aes(x = HouseStyle, y = SalePrice, fill = SaleCondition)) +
-  coord_flip() +
-  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
-  theme(legend.position = "bottom")
-
-ggplot(data.cleaned) +
-  geom_boxplot(aes(x = TotRmsAbvGrd, y = SalePrice, fill = SaleCondition)) +
-  coord_flip() +
-  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
-  theme(legend.position = "bottom")
-
-ggplot(data.cleaned) +
-  geom_boxplot(aes(x = TotRmsAbvGrd, y = SalePrice, fill = SaleCondition)) +
-  coord_flip() +
-  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
-  theme(legend.position = "bottom")
-
-ggplot(data.cleaned) +
-  geom_boxplot(aes(x = RoofStyle, y = SalePrice, fill = SaleCondition)) +
-  coord_flip() +
-  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
-  theme(legend.position = "bottom")
-
-ggplot(data.cleaned) +
-  geom_boxplot(aes(x = CentralAir, y = SalePrice, fill = SaleCondition)) +
-  coord_flip() +
-  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
-  theme(legend.position = "bottom")
-
-# Sale Price (outliers)
-
-summary(data.cleaned$SalePrice)
-
-ggplot(data.cleaned, aes(SalePrice, fill = ..count..)) +
-  geom_histogram(breaks = pretty(data.cleaned$SalePrice)) +
-  labs(x = "SalePrice", y = "Count") +
-  scale_x_continuous(labels = dollar_format(largest_with_cents = .2))
-
-ggplot(data.cleaned, aes(y = SalePrice)) +
-  geom_boxplot(outlier.colour = "red", fill = "#1C93D1", outlier.shape = 16,
-             outlier.size = 2, notch = FALSE) +
-             coord_flip() +
-             labs(x = "", y = "Sale Price") +
-             scale_y_continuous(labels = dollar_format(largest_with_cents = .2))
-
 data.model <- data.cleaned[data.cleaned$SalePrice < 700000]
-
-ggplot(data.model, aes(y = SalePrice)) +
-  geom_boxplot(outlier.colour = "red", fill = "#1C93D1", outlier.shape = 16,
-             outlier.size = 2, notch = FALSE) +
-             coord_flip() +
-             labs(x = "", y = "Sale Price") +
-             scale_y_continuous(labels = dollar_format(largest_with_cents = .2))
 
 # Drop Waterfall
 
 data.clean.stats$Step <- factor(data.clean.stats$Step, levels = data.clean.stats$Step)
 data.clean.stats$id <- seq_along(data.clean.stats$Records)
 
-ggplot(data.clean.stats, aes(x = id, y = Records, fill = Step)) +
-  geom_rect(aes(xmin = id - 0.45, xmax = id + .45, ymin = 0, ymax = Records)) +
-  theme(legend.position = "bottom")
-
 # Categorical Variables
 
 # Get all factor columns in the data
-catCols <- names(data.model)[sapply(data.model, is.factor)]
 
-results <- data.table( Column = character(), RSq = numeric(), RSE = numeric(), Levels = numeric())
+getCategoryRelationships <- function(data, response) {
 
-for (col in catCols) {
+  catCols <- names(data)[sapply(data, is.factor)]
+  print(length(catCols))
 
-  tryCatch({
-    fmla <- as.formula(paste0("SalePrice ~ ", col))
-    fit <- lm(fmla, data.model)
-    
-    ret <- data.table(Column = col, RSq = summary(fit)$r.squared, RSE = sd(residuals(fit)), Levels = length(coef(fit)))
+  results <- data.table( Column = character(), RSq = numeric(), RSE = numeric(), Levels = numeric(), PctPopulated = numeric())
+
+  for (col in catCols) {
+
+    tryCatch({
+      fmla <- as.formula(paste0(response, " ~ ", col))
+      fit <- lm(fmla, data)
+      pct_value <- (1 - sum(is.na(data[[col]])) / nrow(data)) * 100
+      ret <- data.table(Column = col, RSq = summary(fit)$r.squared, RSE = sd(residuals(fit)), Levels = length(coef(fit)), PctPopulated = pct_value)
   
-    results <- rbind(results, ret, use.names = T)
-  }, error = function(e) {
-    print(e)
-  })
+      results <- rbind(results, ret, use.names = T)
+    }, error = function(e) {
+      print(e)
+    })
+  }
+
+  setorder(results, - RSq, RSE, PctPopulated)
+  results
 }
 
-setorder(results, -RSq,RSE)
-results
+cat.relationships <- getCategoryRelationships(data.model, "SalePrice")
 
-formattable(results, align = c("l", "c", "r"),
+formattable(cat.relationships, align = c("l", "c", "c", "c", "r"),
   list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
 ))
 
-category_model <- function(fmla, data) {
-  fmla <- as.formula(fmla)
+category_model <- function(col, data) {
+
+  data <- data.model[, SalePrice, by = c(col)]
+  print(summary(data))
+
+  fmla <- as.formula(paste0("SalePrice ~ ", col))
   category <- dummyVars(fmla, data = data)
 
   model_fit <- lm(category, data = data)
@@ -262,16 +144,17 @@ category_model <- function(fmla, data) {
   plot_model(model_fit, type = "pred")
 }
 
-category_model("SalePrice ~ MiscFeature", data.model)
+category_model("MiscFeature", data.model)
 tapply(data.model$SalePrice, data.model$MiscFeature, mean)
 
-category_model("SalePrice ~ Neighborhood", data.model)
+category_model("Neighborhood", data.model)
 tapply(data.model$SalePrice, data.model$Neighborhood, mean)
 
-category_model("SalePrice ~ Fence", data.model)
-category_model("SalePrice ~ BsmtQual", data.model)
-category_model("SalePrice ~ PoolQC", data.model)
-category_model("SalePrice ~ KitchenQual", data.model)
-category_model("SalePrice ~ ExterQual", data.model)
-category_model("SalePrice ~ Foundation", data.model)
+category_model("Fence", data.model)
+category_model("BsmtQual", data.model)
+
+category_model("PoolQC", data.model)
+category_model("KitchenQual", data.model)
+category_model("ExterQual", data.model)
+category_model("Foundation", data.model)
 
