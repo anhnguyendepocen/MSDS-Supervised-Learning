@@ -204,6 +204,15 @@ ggplot(data.model) +
   scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
   theme(legend.position = "bottom")
 
+# Foundation
+category_model("Foundation", data.model, "SalePrice")
+
+ggplot(data.model) +
+  geom_boxplot(aes(x = Foundation, y = SalePrice, fill = Foundation)) +
+  coord_flip() +
+  scale_y_continuous(labels = dollar_format(largest_with_cents = .2)) +
+  theme(legend.position = "bottom")
+
 # Fence
 category_model("Fence", data.model, "SalePrice")
 
@@ -211,7 +220,156 @@ category_model("PoolQC", data.model, "SalePrice")
 category_model("ExterQual", data.model, "SalePrice")
 category_model("Foundation", data.model, "SalePrice")
 
-
 category_model("HeatingQC", data.model, "SalePrice")
 category_model("GarageType", data.model, "SalePrice")
 
+# Predictive Model
+
+# Additional cleaning steps
+
+data.clean <- data.model[!is.na(BsmtQual)]
+data.clean <- data.clean[!is.na(KitchenQual)]
+data.clean <- data.clean[!is.na(Foundation)]
+data.clean <- data.clean[!is.na(MasVnrType)]
+data.clean <- data.clean[!is.na(FullBath)]
+
+# dummy variables for selected categorical values
+dmy <- dummyVars("SalePrice ~ BsmtQual + KitchenQual + ExterQual + Foundation + MasVnrType", data = data.clean)
+data.categorical <- data.table(predict(dmy, newdata = data.clean))
+
+head(data.categorical)
+
+# Define these two variables for later use;
+data.clean$QualityIndex <- data.clean$OverallQual * data.clean$OverallCond
+data.clean$TotalSqftCalc <- data.clean$BsmtFinSF1 + data.clean$BsmtFinSF2 + data.clean$GrLivArea
+
+data.clean <- cbind(data.clean, data.categorical)
+
+set.seed(123)
+
+n.total <- nrow(data.clean)
+
+data.clean$u <- runif(n = n.total, min = 0, max = 1)
+
+# Create train/test split;
+data.train <- subset(data.clean, u < 0.70)
+data.test <- subset(data.clean, u >= 0.70)
+
+n.train <-nrow(data.train)
+n.test <- nrow(data.test)
+
+# assert tran + test = total
+stopifnot(n.train + n.test == n.total)
+
+tbl.count <- data.table(Total = n.total, Train = n.train, Test = n.test)
+
+getDataSplit <- function( cnt ) {
+  formattable(cnt, align = c("l", "c", "r"),
+    list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+  ))
+}
+
+# getDataSplit(tbl.count)
+
+data.train.num <- data.train[, .(SalePrice, QualityIndex, TotalSqftCalc, YearBuilt, YearRemodel, LotArea, GrLivArea, TotalBath, TotalBsmtSF, HouseAge, FullBath, HalfBath)]
+data.train.cat <- data.train[, colnames(data.train) %in% colnames(data.categorical), with = F]
+data.train.clean <- cbind(data.train.num, data.train.cat)
+
+ncol(data.train.clean)
+
+model.cols <- data.table(Column = colnames(data.train.clean))
+model.cols$Type = sapply(data.train.clean, typeof)
+
+# Define the upper model as the FULL model
+upper.lm <- lm(SalePrice ~ ., data = data.train.clean)
+summary(upper.lm)
+
+# Define the lower model as the Intercept model
+lower.lm <- lm(SalePrice ~ 1, data = data.train.clean)
+summary(lower.lm)
+
+# Need a SLR to initialize stepwise selection
+sqft.lm <- lm(SalePrice ~ TotalSqftCalc, data = data.train.clean)
+summary(sqft.lm)
+
+# Model Definitions
+?stepAIC
+
+forward.lm <- stepAIC(object = lower.lm, scope = list(upper = formula(upper.lm), lower = ~1), direction = c('forward'))
+summary(forward.lm)
+
+backward.lm <- stepAIC(object = upper.lm, direction = c('backward'))
+summary(backward.lm)
+
+stepwise.lm <- stepAIC(object = sqft.lm, scope = list(upper = formula(upper.lm), lower = ~1), direction = c('both'))
+summary(stepwise.lm)
+
+# Junk Model
+
+junk.lm <- lm(SalePrice ~ OverallQual + OverallCond + QualityIndex + GrLivArea + TotalSqftCalc, data = data.train)
+summary(junk.lm)
+
+# VIF
+
+cbind.fill <- function(...) {
+  nm <- list(...)
+  nm <- lapply(nm, as.matrix)
+  n <- max(sapply(nm, nrow))
+  do.call(cbind, lapply(nm, function(x)
+        rbind(x, matrix(, n - nrow(x), ncol(x)))))
+}
+
+vif.fwd <- vif(forward.lm)
+vif.fwd.dt <- data.table(FwdColumn = names(vif.fwd), FwdValue = vif.fwd)
+setorder(vif.fwd.dt, - FwdValue)
+
+vif.bwd <- vif(backward.lm)
+vif.bwd.dt <- data.table(BwdColumn = names(vif.bwd), BwdValue = vif.bwd)
+setorder(vif.bwd.dt, -BwdValue)
+
+vif.step <- vif(stepwise.lm)
+vif.step.dt <- data.table(StepColumn = names(vif.step), StepValue = vif.step)
+setorder(vif.step.dt, -StepValue)
+
+vif.junk <- vif(junk.lm)
+vif.junk.dt <- data.table(JunkColumn = names(vif.junk), JunkValue = vif.junk)
+setorder(vif.junk.dt, -JunkValue)
+
+vif.dt <- cbind.fill(fiv.fwd.dt, vif.bwd.dt, vif.step.dt, vif.junk.dt)
+
+getVIFResults <- function(vif) {
+  formattable(vif.dt, align = c("l", "c", "c", "c", "c", "r"),
+    list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+ ))
+}
+
+# getVIFResults(as.data.table(vif.dt))
+
+sort(vif(forward.lm), decreasing = TRUE)
+sort(vif(backward.lm), decreasing = TRUE)
+sort(vif(stepwise.lm), decreasing = TRUE)
+sort(vif(junk.lm), decreasing = TRUE)
+
+# Evaluation
+
+insample_fit <- function(name, fit) {
+  return(data.table(Model = name, AIC = AIC(fit), BIC = BIC(fit), MSE = mean(summary(fit)$residuals ^ 2), MAE = mean(abs(fit$residuals))))
+}
+
+fwd.diag <- insample_fit("Forward", forward.lm)
+bwd.diag <- insample_fit("Backward", backward.lm)
+step.diag <- insample_fit("Stepwise", stepwise.lm)
+junk.diag <- insample_fit("Junk", junk.lm)
+
+consolidated.diag <- rbind(insample_fit("Forward", forward.lm), insample_fit("Backward", backward.lm), insample_fit("Stepwise", stepwise.lm), insample_fit("Junk", junk.lm))
+
+consolidated.diag$AIC_Rank <- rank(consolidated.diag$AIC)
+consolidated.diag$BIC_Rank <- rank(consolidated.diag$BIC)
+consolidated.diag$MSE_Rank <- rank(consolidated.diag$MSE)
+consolidated.diag$MAE_Rank <- rank(consolidated.diag$MAE)
+
+consolidated.diag <- consolidated.diag[, .(Model, AIC, AIC_Rank, BIC, BIC_Rank, MSE, MSE_Rank, MAE, MAE_Rank)]
+
+formattable(consolidated.diag, align = c("l", "c", "c", "c", "c", "c", "c", "r"),
+    list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+))
