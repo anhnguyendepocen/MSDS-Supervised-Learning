@@ -452,8 +452,42 @@ formattable(outsample.grades, align = c("l", "c", "c", "r"),
 
 # Model Revision
 
-fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual.Ex + KitchenQual.Ex + Foundation.PConc + MasVnrType.None")
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual.Ex + BsmtQual.Gd + KitchenQual.Ex + KitchenQual.Gd + ExterQual.Ex + ExterQual.Gd + Foundation.PConc + MasVnrType. + MasVnrType.None")
 f.model <- lm(formula = fmla.backward, data = data.train)
 
 summary(f.model)
 summary(backward.lm)
+
+diff <- data.table(Variable = character(), RSq = numeric(), Diff = numeric())
+
+rsq <- summary(f.model)$adj.r.squared
+baseline <- data.table(Variable = "Baseline", RSq = rsq, Diff = 0)
+diff <- rbind(diff, baseline)
+
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual.Ex + BsmtQual.Gd + KitchenQual.Ex + KitchenQual.Gd + ExterQual.Ex + ExterQual.Gd + Foundation.PConc + MasVnrType.None")
+f.model <- lm(formula = fmla.backward, data = data.train)
+new.rsq <- summary(f.model)$adj.r.squared
+masvnr <- data.table(Variable = "MasVnrType.", RSq = new.rsq, Diff = rsq - new.rsq)
+diff <- rbind(diff, masvnr)
+rsq <- new.rsq
+
+summary(f.model)
+
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual.Ex + KitchenQual.Ex + KitchenQual.Gd + ExterQual.Ex + ExterQual.Gd + Foundation.PConc + MasVnrType.None")
+f.model <- lm(formula = fmla.backward, data = data.train)
+new.rsq <- summary(f.model)$adj.r.squared
+masvnr <- data.table(Variable = "BsmtQual.Gd", RSq = new.rsq, Diff = rsq - new.rsq)
+diff <- rbind(diff, masvnr)
+rsq <- new.rsq
+
+summary(f.model)
+
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual.Ex + KitchenQual.Ex + KitchenQual.Gd + ExterQual.Ex + ExterQual.Gd + Foundation.PConc + MasVnrType.None")
+f.model <- lm(formula = fmla.backward, data = data.train)
+new.rsq <- summary(f.model)$adj.r.squared
+masvnr <- data.table(Variable = "BsmtQual.Gd", RSq = new.rsq, Diff = rsq - new.rsq)
+diff <- rbind(diff, masvnr)
+rsq <- new.rsq
+
+summary(f.model)
+
