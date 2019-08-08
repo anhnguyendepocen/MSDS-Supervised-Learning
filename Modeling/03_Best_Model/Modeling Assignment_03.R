@@ -18,6 +18,7 @@ library(sjmisc)
 library(car)
 library(WVPlots)
 library(MASS)
+library(Metrics)
 
 #####################################################################
 ######################### Modeling 3 ################################
@@ -353,23 +354,106 @@ sort(vif(junk.lm), decreasing = TRUE)
 # Evaluation
 
 insample_fit <- function(name, fit) {
-  return(data.table(Model = name, AIC = AIC(fit), BIC = BIC(fit), MSE = mean(summary(fit)$residuals ^ 2), MAE = mean(abs(fit$residuals))))
+  return(data.table(Model = name, AdjRSq = summary(fit)$adj.r.squared, AIC = AIC(fit), BIC = BIC(fit), MSE = mean(summary(fit)$residuals ^ 2), MAE = mean(abs(fit$residuals))))
 }
-
-fwd.diag <- insample_fit("Forward", forward.lm)
-bwd.diag <- insample_fit("Backward", backward.lm)
-step.diag <- insample_fit("Stepwise", stepwise.lm)
-junk.diag <- insample_fit("Junk", junk.lm)
 
 consolidated.diag <- rbind(insample_fit("Forward", forward.lm), insample_fit("Backward", backward.lm), insample_fit("Stepwise", stepwise.lm), insample_fit("Junk", junk.lm))
 
+consolidated.diag$AdjRSq_Rank <- rank(-consolidated.diag$AdjRSq)
 consolidated.diag$AIC_Rank <- rank(consolidated.diag$AIC)
 consolidated.diag$BIC_Rank <- rank(consolidated.diag$BIC)
 consolidated.diag$MSE_Rank <- rank(consolidated.diag$MSE)
 consolidated.diag$MAE_Rank <- rank(consolidated.diag$MAE)
 
-consolidated.diag <- consolidated.diag[, .(Model, AIC, AIC_Rank, BIC, BIC_Rank, MSE, MSE_Rank, MAE, MAE_Rank)]
+consolidated.diag$AIC <- dollar(consolidated.diag$AIC)
+consolidated.diag$BIC <- dollar(consolidated.diag$BIC)
+consolidated.diag$MAE <- dollar(consolidated.diag$MAE)
+consolidated.diag$MSE <- dollar(consolidated.diag$MSE)
 
-formattable(consolidated.diag, align = c("l", "c", "c", "c", "c", "c", "c", "r"),
+consolidated.diag <- consolidated.diag[, .(Model, AdjRSq, AdjRSq_Rank, AIC, AIC_Rank, BIC, BIC_Rank, MSE, MSE_Rank, MAE, MAE_Rank)]
+
+formattable(consolidated.diag, align = c("l", "c", "c", "c", "c", "c", "c", "c", "r"),
     list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
 ))
+
+dollar(mse(data.train$SalePrice, predict(forward.lm)))
+
+# Predictive Accuracy
+
+outsample_fit <- function(name, fit, test.data) {
+  y_hat <- predict(fit, newdata = test.data)
+  residuals <- y_hat - test.data$SalePrice
+
+  return(data.table(Model = name, MAE = mean(abs(residuals)), MSE = mse(test.data$SalePrice, y_hat)))
+}
+
+outsample.diag <- rbind(outsample_fit("Forward", forward.lm, data.test), outsample_fit("Backward", backward.lm, data.test), outsample_fit("Stepwise", stepwise.lm, data.test), outsample_fit("Junk", junk.lm, data.test))
+
+outsample.diag$MSE_Rank <- rank(outsample.diag$MSE)
+outsample.diag$MAE_Rank <- rank(outsample.diag$MAE)
+
+outsample.diag <- outsample.diag[, .(Model, MSE, MSE_Rank, MAE, MAE_Rank)]
+outsample.diag$MAE <- dollar(outsample.diag$MAE)
+outsample.diag$MSE <- dollar(outsample.diag$MSE)
+
+formattable(outsample.diag, align = c("l", "c", "c", "c", "c", "c", "c", "c", "r"),
+    list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+))
+
+# Operational Validation
+
+# Training Data
+# Abs Pct Error
+
+insample.grade.model <- function(fit, train) {
+  model.pct <- abs(fit$residuals) / train$SalePrice;
+
+  prediction.grade <- ifelse(model.pct <= 0.10, 'Grade 1: [0.0.10]',
+          ifelse(model.pct <= 0.15, 'Grade 2: (0.10,0.15]',
+            ifelse(model.pct <= 0.25, 'Grade 3: (0.15,0.25]',
+            'Grade 4: (0.25+]')))
+
+  trainTable <- table(prediction.grade)
+  round(trainTable / sum(trainTable) * 100, 4)
+}
+
+insample.grades <- data.table(rbind(insample.grade.model(forward.lm, data.train), insample.grade.model(backward.lm, data.train), insample.grade.model(stepwise.lm, data.train), insample.grade.model(junk.lm, data.train)))
+insample.grades <- cbind(c("Forward", "Backward", "Stepwise", "Junk"), insample.grades)
+colnames(insample.grades)[1] <- "Model"
+
+formattable(insample.grades, align = c("l", "c", "c", "r"),
+    list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+))
+
+outsample.grade.model <- function(predicted, actual) {
+  model.pct <- abs(actual - predicted) / actual;
+
+  prediction.grade <- ifelse(model.pct <= 0.10, 'Grade 1: [0.0.10]',
+          ifelse(model.pct <= 0.15, 'Grade 2: (0.10,0.15]',
+            ifelse(model.pct <= 0.25, 'Grade 3: (0.15,0.25]',
+            'Grade 4: (0.25+]')))
+
+  trainTable <- table(prediction.grade)
+  round(trainTable / sum(trainTable) * 100, 4)
+}
+
+outsample.grades <- data.table(rbind(outsample.grade.model(predict(forward.lm, newdata = data.test), data.test$SalePrice),
+                                  outsample.grade.model(predict(backward.lm, newdata = data.test), data.test$SalePrice),
+                                  outsample.grade.model(predict(stepwise.lm, newdata = data.test), data.test$SalePrice),
+                                  outsample.grade.model(predict(junk.lm, newdata = data.test), data.test$SalePrice)))
+
+outsample.grades <- cbind(c("Forward", "Backward", "Stepwise", "Junk"), outsample.grades)
+colnames(outsample.grades)[1] <- "Model"
+
+
+formattable(outsample.grades, align = c("l", "c", "c", "r"),
+    list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+))
+
+# Model Revision
+
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual.Ex + KitchenQual.Ex + Foundation.PConc + MasVnrType.None")
+f.model <- lm(formula = fmla.backward, data = data.train)
+
+summary(f.model)
+summary(backward.lm)
