@@ -445,24 +445,39 @@ outsample.grades <- data.table(rbind(outsample.grade.model(predict(forward.lm, n
 outsample.grades <- cbind(c("Forward", "Backward", "Stepwise", "Junk"), outsample.grades)
 colnames(outsample.grades)[1] <- "Model"
 
-
 formattable(outsample.grades, align = c("l", "c", "c", "r"),
     list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
 ))
 
 # Model Revision
 
-fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual.Ex + BsmtQual.Gd + KitchenQual.Ex + KitchenQual.Gd + ExterQual.Ex + ExterQual.Gd + Foundation.PConc + MasVnrType. + MasVnrType.None")
-f.model <- lm(formula = fmla.backward, data = data.train)
+colnames(data.train)
 
-summary(f.model)
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual. + BsmtQual.Ex + BsmtQual.Fa + BsmtQual.Gd + BsmtQual.Po + BsmtQual.TA + KitchenQual.Fa + KitchenQual.Gd + KitchenQual.Po + KitchenQual.TA + KitchenQual.Fa + ExterQual.Ex + ExterQual.Gd + Foundation.BrkTil + Foundation.CBlock + Foundation.PConc + Foundation.Slab+ MasVnrType. + MasVnrType.BrkCmn + MasVnrType.BrkFace + MasVnrType.CBlock + MasVnrType.None + MasVnrType.Stone")
+f.model.baseline <- lm(formula = fmla.backward, data = data.train)
+
+f.pred.train <- data.table(actual = data.train$SalePrice, pred = predict(f.model.baseline))
+GainCurvePlot(f.pred.train, "pred", "actual", "Predicted Sale Price (Train)")
+
+summary(f.model.baseline)
 summary(backward.lm)
+
+# MasVnrType. + MasVnrType.BrkCmn + MasVnrType.BrkFace + MasVnrType.CBlock + MasVnrType.None + MasVnrType.Stone
+# KitchenQual.Fa + KitchenQual.Gd + KitchenQual.Po + KitchenQual.TA
+# ExterQual.Ex + ExterQual.Fa + ExterQual.Gd + ExterQual.TA
+# Foundation.BrkTil + Foundation.CBlock + Foundation.PConc + Foundation.Slab
+# BsmtQual. + BsmtQual.Ex + BsmtQual.Fa + BsmtQual.Gd + BsmtQual.Po + BsmtQual.TA
+
+insample_fit("Final", f.model.baseline)
+outsample_fit("Final", f.model.baseline, data.test)
 
 diff <- data.table(Variable = character(), RSq = numeric(), Diff = numeric())
 
 rsq <- summary(f.model)$adj.r.squared
 baseline <- data.table(Variable = "Baseline", RSq = rsq, Diff = 0)
 diff <- rbind(diff, baseline)
+
+# Term Reduction
 
 fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual.Ex + BsmtQual.Gd + KitchenQual.Ex + KitchenQual.Gd + ExterQual.Ex + ExterQual.Gd + Foundation.PConc + MasVnrType.None")
 f.model <- lm(formula = fmla.backward, data = data.train)
@@ -482,12 +497,34 @@ rsq <- new.rsq
 
 summary(f.model)
 
-fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual.Ex + KitchenQual.Ex + KitchenQual.Gd + ExterQual.Ex + ExterQual.Gd + Foundation.PConc + MasVnrType.None")
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual.Ex + KitchenQual.Ex + ExterQual.Ex + ExterQual.Gd + Foundation.PConc + MasVnrType.None")
 f.model <- lm(formula = fmla.backward, data = data.train)
 new.rsq <- summary(f.model)$adj.r.squared
-masvnr <- data.table(Variable = "BsmtQual.Gd", RSq = new.rsq, Diff = rsq - new.rsq)
+masvnr <- data.table(Variable = "KitchenQual.Gd ", RSq = new.rsq, Diff = rsq - new.rsq)
 diff <- rbind(diff, masvnr)
 rsq <- new.rsq
 
 summary(f.model)
+
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual.Ex + KitchenQual.Ex + ExterQual.Ex + ExterQual.Gd + Foundation.PConc + MasVnrType.None")
+f.model <- lm(formula = fmla.backward, data = data.train)
+new.rsq <- summary(f.model)$adj.r.squared
+masvnr <- data.table(Variable = "KitchenQual.Gd ", RSq = new.rsq, Diff = rsq - new.rsq)
+diff <- rbind(diff, masvnr)
+rsq <- new.rsq
+
+summary(f.model)
+
+formattable(diff, align = c("l", "c", "r"),
+    list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+))
+
+insample_fit("Final", f.model)
+outsample_fit("Final", f.model, data.test)
+
+f.pred.train <- data.table(actual = data.train$SalePrice, pred = predict(f.model))
+GainCurvePlot(f.pred.train, "pred", "actual", "Predicted Sale Price (Train)")
+
+f.pred.test <- data.table(actual = data.test$SalePrice, pred = predict(f.model, newdata = data.test))
+GainCurvePlot(f.pred.test, "pred", "actual", "Predicted Sale Price (Test)")
 
