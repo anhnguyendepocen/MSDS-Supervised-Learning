@@ -12,16 +12,16 @@ library(gridExtra)
 library(lessR)
 
 #####################################################################
-######################### Assignment 3 ##############################
+######################### Computation 3 #############################
 #####################################################################
 
-path.work <- "E:/GitHub/MSDS-RegressionAnalysis/data"
-path.home <- "D:/Projects/MSDS-RegressionAnalysis/data"
+path.w <- "E:/GitHub/MSDS-RegressionAnalysis/data"
+path.h <- "D:/Projects/MSDS-RegressionAnalysis/data"
 
-if (file.exists(path.home)) {
-  setwd(path.home)
+if (file.exists(path.h)) {
+  setwd(path.h)
 } else {
-  setwd(path.work)
+  setwd(path.w)
 }
 
 theme_set(theme_light())
@@ -219,7 +219,6 @@ data.interaction[, ':='(HO = AlcoholHeavy * VitaminOccasional, HR = AlcoholHeavy
 full_fit <- lm(formula = Cholesterol ~ AlcoholModerate + AlcoholHeavy + VitaminOccasional + VitaminRegular + HO + HR + MO + MR, data = data.interaction)
 summary(full_fit)
 anova(full_fit)
-
 
 reduced_fit <- lm(formula = Cholesterol ~ AlcoholModerate + AlcoholHeavy + VitaminOccasional + VitaminRegular, data = data.interaction)
 summary(reduced_fit)

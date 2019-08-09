@@ -63,3 +63,5 @@ install.packages('car', dependencies = TRUE)
 
 install.packages('lattice', dependencies = TRUE)
 
+install.packages('ggiraphExtra', dependencies = TRUE)
+install.packages('olsrr', dependencies = TRUE)

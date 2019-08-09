@@ -14,13 +14,13 @@ library(gridExtra)
 ######################### Assignment 3 ##############################
 #####################################################################
 
-path.work <- "E:/GitHub/MSDS-RegressionAnalysis/data"
-path.home <- "D:/Projects/MSDS-RegressionAnalysis/data"
+path.w <- "E:/GitHub/MSDS-RegressionAnalysis/data"
+path.h <- "D:/Projects/MSDS-RegressionAnalysis/data"
 
-if (file.exists(path.home)) {
-  setwd(path.home)
+if (file.exists(path.h)) {
+  setwd(path.h)
 } else {
-  setwd(path.work)
+  setwd(path.w)
 }
 
 theme_set(theme_light())
