@@ -453,11 +453,13 @@ formattable(outsample.grades, align = c("l", "c", "c", "r"),
 
 colnames(data.train)
 
-fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual. + BsmtQual.Ex + BsmtQual.Fa + BsmtQual.Gd + BsmtQual.Po + BsmtQual.TA + KitchenQual.Fa + KitchenQual.Gd + KitchenQual.Po + KitchenQual.TA + KitchenQual.Fa + ExterQual.Ex + ExterQual.Gd + Foundation.BrkTil + Foundation.CBlock + Foundation.PConc + Foundation.Slab+ MasVnrType. + MasVnrType.BrkCmn + MasVnrType.BrkFace + MasVnrType.CBlock + MasVnrType.None + MasVnrType.Stone")
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual. + BsmtQual.Ex + BsmtQual.Fa + BsmtQual.Gd + BsmtQual.Po + BsmtQual.TA + KitchenQual.Fa + KitchenQual.Gd + KitchenQual.Po + KitchenQual.TA + KitchenQual.Fa + ExterQual.Ex + ExterQual.Gd + Foundation.BrkTil + Foundation.CBlock + Foundation.PConc + Foundation.Slab + MasVnrType. + MasVnrType.BrkCmn + MasVnrType.BrkFace + MasVnrType.CBlock + MasVnrType.None + MasVnrType.Stone")
 f.model.baseline <- lm(formula = fmla.backward, data = data.train)
 
 f.pred.train <- data.table(actual = data.train$SalePrice, pred = predict(f.model.baseline))
 GainCurvePlot(f.pred.train, "pred", "actual", "Predicted Sale Price (Train)")
+
+coef(f.model.baseline)
 
 summary(f.model.baseline)
 summary(backward.lm)
@@ -471,53 +473,122 @@ summary(backward.lm)
 insample_fit("Final", f.model.baseline)
 outsample_fit("Final", f.model.baseline, data.test)
 
+# Term Reduction
+
 diff <- data.table(Variable = character(), RSq = numeric(), Diff = numeric())
 
-rsq <- summary(f.model)$adj.r.squared
+rsq <- summary(f.model.baseline)$adj.r.squared
 baseline <- data.table(Variable = "Baseline", RSq = rsq, Diff = 0)
 diff <- rbind(diff, baseline)
 
-# Term Reduction
-
-fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual.Ex + BsmtQual.Gd + KitchenQual.Ex + KitchenQual.Gd + ExterQual.Ex + ExterQual.Gd + Foundation.PConc + MasVnrType.None")
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual. + BsmtQual.Ex + BsmtQual.Fa + BsmtQual.Gd + BsmtQual.Po + BsmtQual.TA + KitchenQual.Fa + KitchenQual.Gd + KitchenQual.Po + KitchenQual.TA + KitchenQual.Fa + ExterQual.Ex + ExterQual.Fa + ExterQual.Gd + ExterQual.TA + Foundation.BrkTil + Foundation.CBlock + Foundation.PConc + Foundation.Slab")
 f.model <- lm(formula = fmla.backward, data = data.train)
 new.rsq <- summary(f.model)$adj.r.squared
-masvnr <- data.table(Variable = "MasVnrType.", RSq = new.rsq, Diff = rsq - new.rsq)
-diff <- rbind(diff, masvnr)
+vars <- data.table(Variable = "MasVnrType. + MasVnrType.BrkCmn + MasVnrType.BrkFace + MasVnrType.CBlock + MasVnrType.None + MasVnrType.Stone", RSq = new.rsq, Diff = rsq - new.rsq)
+diff <- rbind(diff, vars)
 rsq <- new.rsq
 
 summary(f.model)
 
-fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual.Ex + KitchenQual.Ex + KitchenQual.Gd + ExterQual.Ex + ExterQual.Gd + Foundation.PConc + MasVnrType.None")
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual. + BsmtQual.Ex + BsmtQual.Fa + BsmtQual.Gd + BsmtQual.Po + BsmtQual.TA + KitchenQual.Fa + KitchenQual.Gd + KitchenQual.Po + KitchenQual.TA + KitchenQual.Fa + ExterQual.Ex + ExterQual.Fa + ExterQual.Gd + ExterQual.TA")
 f.model <- lm(formula = fmla.backward, data = data.train)
 new.rsq <- summary(f.model)$adj.r.squared
-masvnr <- data.table(Variable = "BsmtQual.Gd", RSq = new.rsq, Diff = rsq - new.rsq)
-diff <- rbind(diff, masvnr)
+vars <- data.table(Variable = "Foundation.BrkTil + Foundation.CBlock + Foundation.PConc + Foundation.Slab", RSq = new.rsq, Diff = rsq - new.rsq)
+diff <- rbind(diff, vars)
 rsq <- new.rsq
 
 summary(f.model)
 
-fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual.Ex + KitchenQual.Ex + ExterQual.Ex + ExterQual.Gd + Foundation.PConc + MasVnrType.None")
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual. + BsmtQual.Ex + BsmtQual.Fa + BsmtQual.Gd + BsmtQual.Po + BsmtQual.TA + KitchenQual.Fa + KitchenQual.Gd + KitchenQual.Po + KitchenQual.TA + KitchenQual.Fa")
 f.model <- lm(formula = fmla.backward, data = data.train)
 new.rsq <- summary(f.model)$adj.r.squared
-masvnr <- data.table(Variable = "KitchenQual.Gd ", RSq = new.rsq, Diff = rsq - new.rsq)
-diff <- rbind(diff, masvnr)
+vars <- data.table(Variable = "ExterQual.Ex + ExterQual.Fa + ExterQual.Gd + ExterQual.TA", RSq = new.rsq, Diff = rsq - new.rsq)
+diff <- rbind(diff, vars)
 rsq <- new.rsq
 
 summary(f.model)
 
-fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual.Ex + KitchenQual.Ex + ExterQual.Ex + ExterQual.Gd + Foundation.PConc + MasVnrType.None")
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual. + BsmtQual.Ex + BsmtQual.Fa + BsmtQual.Gd + BsmtQual.Po + BsmtQual.TA")
 f.model <- lm(formula = fmla.backward, data = data.train)
 new.rsq <- summary(f.model)$adj.r.squared
-masvnr <- data.table(Variable = "KitchenQual.Gd ", RSq = new.rsq, Diff = rsq - new.rsq)
-diff <- rbind(diff, masvnr)
+vars <- data.table(Variable = "KitchenQual.Fa + KitchenQual.Gd + KitchenQual.Po + KitchenQual.TA + KitchenQual.Fa", RSq = new.rsq, Diff = rsq - new.rsq)
+diff <- rbind(diff, vars)
 rsq <- new.rsq
 
 summary(f.model)
+
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge + KitchenQual.Fa + KitchenQual.Gd + KitchenQual.Po + KitchenQual.TA + KitchenQual.Fa")
+f.model <- lm(formula = fmla.backward, data = data.train)
+new.rsq <- summary(f.model)$adj.r.squared
+vars <- data.table(Variable = "BsmtQual. + BsmtQual.Ex + BsmtQual.Fa + BsmtQual.Gd + BsmtQual.Po + BsmtQual.TA", RSq = new.rsq, Diff = rsq - new.rsq)
+diff <- rbind(diff, vars)
+rsq <- new.rsq
+
+summary(f.model)
+
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + HouseAge")
+f.model <- lm(formula = fmla.backward, data = data.train)
+new.rsq <- summary(f.model)$adj.r.squared
+vars <- data.table(Variable = "BsmtQual. + BsmtQual.Ex + BsmtQual.Fa + BsmtQual.Gd + BsmtQual.Po + BsmtQual.TA + KitchenQual.Fa + KitchenQual.Gd + KitchenQual.Po + KitchenQual.TA + KitchenQual.Fa", RSq = new.rsq, Diff = rsq - new.rsq)
+diff <- rbind(diff, vars)
+rsq <- new.rsq
+
+summary(f.model)
+
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + TotalBsmtSF + BsmtQual. + BsmtQual.Ex + BsmtQual.Fa + BsmtQual.Gd + BsmtQual.Po + BsmtQual.TA + KitchenQual.Fa + KitchenQual.Gd + KitchenQual.Po + KitchenQual.TA + KitchenQual.Fa")
+f.model <- lm(formula = fmla.backward, data = data.train)
+new.rsq <- summary(f.model)$adj.r.squared
+vars <- data.table(Variable = "HouseAge", RSq = new.rsq, Diff = rsq - new.rsq)
+diff <- rbind(diff, vars)
+rsq <- new.rsq
+
+summary(f.model)
+
+fmla.backward = as.formula("SalePrice ~ QualityIndex + LotArea + GrLivArea + TotalBsmtSF + HouseAge + BsmtQual. + BsmtQual.Ex + BsmtQual.Fa + BsmtQual.Gd + BsmtQual.Po + BsmtQual.TA + KitchenQual.Fa + KitchenQual.Gd + KitchenQual.Po + KitchenQual.TA + KitchenQual.Fa")
+f.model <- lm(formula = fmla.backward, data = data.train)
+new.rsq <- summary(f.model)$adj.r.squared
+vars <- data.table(Variable = "TotalSqftCalc", RSq = new.rsq, Diff = rsq - new.rsq)
+diff <- rbind(diff, vars)
+rsq <- new.rsq
+
+summary(f.model)
+
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + TotalBsmtSF + HouseAge + BsmtQual. + BsmtQual.Ex + BsmtQual.Fa + BsmtQual.Gd + BsmtQual.Po + BsmtQual.TA + KitchenQual.Fa + KitchenQual.Gd + KitchenQual.Po + KitchenQual.TA + KitchenQual.Fa")
+f.model <- lm(formula = fmla.backward, data = data.train)
+new.rsq <- summary(f.model)$adj.r.squared
+vars <- data.table(Variable = "GrLivArea", RSq = new.rsq, Diff = rsq - new.rsq)
+diff <- rbind(diff, vars)
+rsq <- new.rsq
+
+summary(f.model)
+
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + HouseAge + BsmtQual. + BsmtQual.Ex + BsmtQual.Fa + BsmtQual.Gd + BsmtQual.Po + BsmtQual.TA + KitchenQual.Fa + KitchenQual.Gd + KitchenQual.Po + KitchenQual.TA + KitchenQual.Fa")
+f.model <- lm(formula = fmla.backward, data = data.train)
+new.rsq <- summary(f.model)$adj.r.squared
+vars <- data.table(Variable = "TotalBsmtSF", RSq = new.rsq, Diff = rsq - new.rsq)
+diff <- rbind(diff, vars)
+rsq <- new.rsq
+
+summary(f.model)
+
+fmla.backward = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + HouseAge + TotalBsmtSF + BsmtQual. + BsmtQual.Ex + BsmtQual.Fa + BsmtQual.Gd + BsmtQual.Po + BsmtQual.TA + KitchenQual.Fa + KitchenQual.Gd + KitchenQual.Po + KitchenQual.TA + KitchenQual.Fa")
+f.model <- lm(formula = fmla.backward, data = data.train)
+new.rsq <- summary(f.model)$adj.r.squared
+vars <- data.table(Variable = "TotalBsmtSF", RSq = new.rsq, Diff = rsq - new.rsq)
+diff <- rbind(diff, vars)
+rsq <- new.rsq
+
+summary(f.model)
+
+diff
 
 formattable(diff, align = c("l", "c", "r"),
     list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
 ))
+
+fmla.final = as.formula("SalePrice ~ QualityIndex + TotalSqftCalc + LotArea + GrLivArea + HouseAge + TotalBsmtSF + BsmtQual. + BsmtQual.Ex + BsmtQual.Fa + BsmtQual.Gd + BsmtQual.Po + BsmtQual.TA + KitchenQual.Fa + KitchenQual.Gd + KitchenQual.Po + KitchenQual.TA + KitchenQual.Fa + ExterQual.Ex + ExterQual.Fa + ExterQual.Gd + ExterQual.TA")
+f.model <- lm(formula = fmla.final, data = data.train)
+summary(f.model)
 
 insample_fit("Final", f.model)
 outsample_fit("Final", f.model, data.test)
