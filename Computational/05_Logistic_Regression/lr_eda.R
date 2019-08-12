@@ -41,14 +41,14 @@ mytable
 
 prop.table(mytable)
 
-# cell 
-percentagesprop.table(mytable, 1)
+# cell percentages
+prop.table(mytable, 1)
 
-# row 
-percentagesprop.table(mytable, 2)
+# row percentages
+prop.table(mytable, 2)
 
-# column 
-percentagesBoxPlot(MVR_PTS, data = mydata)
+# column percentages
+BoxPlot(MVR_PTS, data = mydata)
 BoxPlot(MVR_PTS, by1 = TARGET_FLAG, data = mydata)
 
 ttest(x = TARGET_FLAG, y = MVR_PTS)
