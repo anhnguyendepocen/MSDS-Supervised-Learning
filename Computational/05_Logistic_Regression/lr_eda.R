@@ -27,6 +27,7 @@ prop.table(mytable, 1)
 # row percentages
 prop.table(mytable, 2)
 # column percentages
+
 Histogram(AGE, data = mydata)
 Histogram(AGE, by1 = TARGET_FLAG, data = mydata)
 

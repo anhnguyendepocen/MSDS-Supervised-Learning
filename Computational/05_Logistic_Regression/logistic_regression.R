@@ -14,9 +14,10 @@ library(sjPlot)
 library(sjmisc)
 library(car)
 library(WVPlots)
+library(lessR)
 
 #####################################################################
-######################### Computation 4 #############################
+######################### Computation 5 #############################
 #####################################################################
 
 path.w <- "E:/GitHub/MSDS-RegressionAnalysis/data"
@@ -38,5 +39,22 @@ theme_update(plot.title = element_text(hjust = 0.5),
              legend.position = "top", legend.title = element_blank())
 
 # Data set of interest
+data.religion <- as.data.table(read.csv(file = "RELIGION.csv", head = TRUE, sep = ","))
 
-data.nutrition <- as.data.table(read.csv(file = "NutritionStudy.csv", head = TRUE, sep = ","))
+# EDA
+
+attach(data.religion)
+
+str(data.religion)
+
+# Religious School prob / odds
+rel.table <- table(RELSCHOL)
+rel.prob <- rel.table / nrow(data.religion)
+rel.odds <- rel.prob / (1 - rel.prob)
+
+ggplot(data.religion, aes(INCOME, RELSCHOL)) +
+  geom_point()
+
+ggplot(data.religion, aes(ATTEND, RELSCHOL)) +
+  geom_point()
+

@@ -37,3 +37,4 @@ fit4_lr <- glm(Survival ~ Age + Sex, family = binomial, data = mydata)
 fit4_lr
 anova(fit4_lr)
 summary(fit4_lr)
+
