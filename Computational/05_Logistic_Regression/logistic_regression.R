@@ -58,3 +58,15 @@ ggplot(data.religion, aes(INCOME, RELSCHOL)) +
 ggplot(data.religion, aes(ATTEND, RELSCHOL)) +
   geom_point()
 
+model1_fit <- glm(RELSCHOL ~ INCOME, family = binomial, data = data.religion)
+summary(model1_fit)
+
+
+plot.dat <- data.frame(prob = data.religion$RELSCHOL,
+                       income = data.religion$INCOME,
+                       fit = predict(model1_fit, data.religion))
+plot.dat$fit_prob <- exp(plot.dat$fit) / (1 + exp(plot.dat$fit))
+
+ggplot(plot.dat, aes(x = income, y = prob)) +
+  geom_point() +
+  geom_line(aes(x = income, y = fit_prob))
