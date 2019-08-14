@@ -52,21 +52,78 @@ rel.table <- table(RELSCHOL)
 rel.prob <- rel.table / nrow(data.religion)
 rel.odds <- rel.prob / (1 - rel.prob)
 
-ggplot(data.religion, aes(INCOME, RELSCHOL)) +
-  geom_point()
+# Q2
+
+Plot(INCOME, RELSCHOL, data = data.religion)
+
+by_income <- data.religion[, .(Prob = sum(RELSCHOL) / .N, Count = .N), by = INCOME]
+setorder(by_income, INCOME)
+by_income
+
+mean(by_income[INCOME >= 8]$Prob) * 100 # Cut-off point
+mean(by_income[INCOME <= 7]$Prob) * 100
+
+sort(unique(data.religion$INCOME))
+
+tbl.income <- table(RELSCHOL, INCOME)
+round(prop.table(tbl.income), 3)
+
+p1 <- ggplot(data.religion[, .(Prob = sum(RELSCHOL) / .N), by = INCOME], aes(INCOME, Prob)) +
+  geom_point() +
+  geom_line() +
+  labs( title = "Proportion of Religious School by Income")
+
+p2 <- ggplot(data.religion, aes(INCOME, fill = ..count..)) +
+  geom_histogram() +
+  labs(title = "Income Distribution")
+
+grid.arrange(p1, p2, nrow = 2)
+
+data.religion$D_INCOME <- ifelse(data.religion$INCOME >= 8, 1, 0)
+
+attach(data.religion)
+
+tbl.d_income <- table(RELSCHOL, D_INCOME)
+round(tbl.d_income, 3)
+
+by_attendance <- data.religion[, .(Value = sum(RELSCHOL), Prob = sum(RELSCHOL) / .N, Count = .N), by = ATTEND]
+setorder(by_attendance, ATTEND)
+by_attendance
+
+tbl.attend <- table(RELSCHOL, ATTEND)
+tbl.attend / nrow(data.religion)
+round(prop.table(tbl.attend, 1), 3)
+round(prop.table(tbl.attend, 2), 3)
 
 ggplot(data.religion, aes(ATTEND, RELSCHOL)) +
   geom_point()
 
-model1_fit <- glm(RELSCHOL ~ INCOME, family = binomial, data = data.religion)
+p1 <- ggplot(data.religion[, .(Prob = sum(RELSCHOL) / .N), by = ATTEND], aes(ATTEND, Prob)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "Proportion of Religious School by Attendance")
+
+p2 <- ggplot(data.religion, aes(ATTEND, fill = ..count..)) +
+  geom_histogram() +
+  labs(title = "Attendence Distribution")
+
+grid.arrange(p1, p2, nrow = 2)
+
+# Q3
+
+# Logistic Regression
+
+summary(data.religion)
+
+log_fit <- function(name, fit) {
+  return(data.table(Model = name, AIC = AIC(fit), BIC = BIC(fit)))
+}
+
+model1_fit <- glm(RELSCHOL ~ RACE, family = binomial, data = data.religion)
 summary(model1_fit)
 
+model1_stats <- log_fit("Model 1", model1_fit)
 
-plot.dat <- data.frame(prob = data.religion$RELSCHOL,
-                       income = data.religion$INCOME,
-                       fit = predict(model1_fit, data.religion))
-plot.dat$fit_prob <- exp(plot.dat$fit) / (1 + exp(plot.dat$fit))
-
-ggplot(plot.dat, aes(x = income, y = prob)) +
-  geom_point() +
-  geom_line(aes(x = income, y = fit_prob))
+formattable(model1_stats, align = c("l", "c", "r"),
+    list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+))
