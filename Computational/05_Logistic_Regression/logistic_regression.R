@@ -122,21 +122,19 @@ log_fit <- function(name, fit) {
 model1_fit <- glm(RELSCHOL ~ RACE, family = binomial, data = data.religion)
 summary(model1_fit)
 
-model1_stats <- log_fit("Model 1", model1_fit)
-
-formattable(model1_stats, align = c("l", "c", "r"),
+formattable(log_fit("Model 1", model1_fit), align = c("l", "c", "r"),
     list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
 ))
 
 # Race Coefficent
 
-intercept <- round(coef(model1_fit)[1], 3)
-ie <- exp(intercept)
-round(( ie / (1 + ie) ), 3) * 100
+b0 <- coef(model1_fit)[1]
+b0_logit <- exp(b0)
+round((b0_logit / (1 + b0_logit)), 3) * 100 # convert to probability
 
-b1 <- coef(model1_fit)[2]
-be <- exp(b1)
-round( be / ( 1 + be), 3 ) * 100
+X1 <- coef(model1_fit)[2]
+X1_logit <- exp(X1)
+round(X1_logit / (1 + X1_logit), 3) * 100 # convert to probability
 
 confint(model1_fit)
 confint.default(model1_fit)
@@ -166,21 +164,104 @@ ggplot(model1_data, aes(x = race, y = prob)) +
 model2_fit <- glm(RELSCHOL ~ INCOME, family = binomial, data = data.religion)
 summary(model2_fit)
 
-intercept <- coef(model2_fit)[1]
-ie <- exp(intercept)
-round((ie / (1 + ie)), 3) * 100
-
-b1 <- coef(model2_fit)[2]
-be <- exp(b1)
-round(be / (1 + be), 3) * 100
-
 model2_data <- data.table(prob = data.religion$RELSCHOL,
                        income = data.religion$INCOME,
                        fit = predict(model2_fit, data.religion))
 
-model2_data$fit_prob <- exp(model2_data$fit) / (1 + exp(model1_data$fit))
+model2_data$fit_prob <- exp(model2_data$fit) / (1 + exp(model2_data$fit))
 
-ggplot(model2_data, aes(x = income, y = prob)) +
+ggplot(model2_data) +
+  geom_point(aes(x = income, y = fit_prob), lwd = 1.5) +
+  labs(title = "Probability of Religious School by Income Bracket")
+
+b0 <- coef(model2_fit)[1]
+b0_logit <- exp(b0)
+round((b0_logit / (1 + b0_logit)), 3) * 100 # convert to probability
+
+X1 <- coef(model2_fit)[2]
+X1_logit <- exp(X1)
+round(X1_logit / (1 + X1_logit), 3) * 100 # convert to probability
+
+logits <- b0 + X1 * model2_data$income
+
+model2_data[, pi := exp(logits) / (1 + exp(logits))]
+
+ggplot(model2_data, aes(income, pi)) +
   geom_point() +
-  geom_line(aes(x = income, y = fit_prob)) +
-  labs( title = "Probability of Religious School by Income Bracket")
+  labs(x = "X1", y = "P(outcome)", title = "Probability of Religious School by Income Bracket")
+
+max(model2_data$pi, na.rm = T)
+
+# Attend
+
+model3_fit <- glm(RELSCHOL ~ ATTEND, family = binomial, data = data.religion)
+summary(model3_fit)
+
+b0 <- coef(model3_fit)[1]
+b0_logit <- exp(b0)
+round((b0_logit / (1 + b0_logit)), 3) * 100 # convert to probability
+
+X1 <- coef(model3_fit)[2]
+X1_logit <- exp(X1)
+round(X1_logit / (1 + X1_logit), 3) * 100 # convert to probability
+
+model3_data <- data.table(prob = data.religion$RELSCHOL,
+                       attend = data.religion$ATTEND,
+                       fit = predict(model3_fit, data.religion))
+
+logits <- b0 + X1 * model3_data$attend
+
+model3_data[, pi := exp(logits) / (1 + exp(logits))]
+
+ggplot(model3_data, aes(attend, pi)) +
+  geom_point() +
+  labs(x = "X1", y = "P(outcome)", title = "Probability of Religious School by Attendance")
+
+formattable(log_fit("Model 3", model3_fit), align = c("l", "c", "r"),
+    list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+))
+
+# Race + Income + Attend
+
+model4_fit <- glm(RELSCHOL ~ RACE + INCOME + ATTEND, family = binomial, data = data.religion)
+summary(model4_fit)
+
+b0 <- coef(model4_fit)[1]
+b0_logit <- exp(b0)
+round((b0_logit / (1 + b0_logit)), 3) * 100 # convert to probability
+
+X1 <- coef(model4_fit)[2]
+X1_logit <- exp(X1)
+round(X1_logit / (1 + X1_logit), 3) * 100 # convert to probability
+
+X2 <- coef(model4_fit)[3]
+X2_logit <- exp(X2)
+round(X2_logit / (1 + X2_logit), 3) * 100 # convert to probability
+
+X3 <- coef(model4_fit)[4]
+X3_logit <- exp(X3)
+round(X3_logit / (1 + X3_logit), 3) * 100 # convert to probability
+
+model4_data <- data.table(prob = data.religion$RELSCHOL,
+                       attend = data.religion$ATTEND,
+                       income = data.religion$INCOME,
+                       race = data.religion$RACE,
+                       fit = predict(model4_fit, data.religion))
+
+model4_data$fit_prob <- exp(model4_data$fit) / (1 + exp(model4_data$fit))
+
+logits <- b0 + X1 * model4_data$race + X2 * model4_data$income + X3 * model4_data$attend
+
+model4_data[, pi := exp(logits) / (1 + exp(logits))]
+
+ggplot(model4_data, aes(attend, pi)) +
+  geom_point() +
+  labs(x = "X1", y = "P(outcome)", title = "Probability of Religious School by Attendance")
+
+formattable(log_fit("Model 4", model4_fit), align = c("l", "c", "r"),
+    list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+))
+
+ggplot(model4_data, aes(x = attend, y = prob)) +
+  geom_point() +
+  geom_line(aes(x = attend, y = fit_prob))
