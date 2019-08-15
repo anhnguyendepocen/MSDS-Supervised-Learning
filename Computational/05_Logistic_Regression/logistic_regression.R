@@ -127,3 +127,60 @@ model1_stats <- log_fit("Model 1", model1_fit)
 formattable(model1_stats, align = c("l", "c", "r"),
     list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
 ))
+
+# Race Coefficent
+
+intercept <- round(coef(model1_fit)[1], 3)
+ie <- exp(intercept)
+round(( ie / (1 + ie) ), 3) * 100
+
+b1 <- coef(model1_fit)[2]
+be <- exp(b1)
+round( be / ( 1 + be), 3 ) * 100
+
+confint(model1_fit)
+confint.default(model1_fit)
+
+round(exp(cbind(OR = coef(model1_fit), confint(model1_fit))), 3)
+
+by_race <- data.religion[, .(Value = sum(RELSCHOL), Prob = sum(RELSCHOL) / .N, Count = .N), by = RACE]
+setorder(by_race, RACE)
+by_race[, Prob := round(Value / Count, 3) ]
+by_race
+
+tbl.race <- table(RELSCHOL, RACE)
+round(prop.table(tbl.race, 1), 3)
+
+model1_data <- data.table(prob = data.religion$RELSCHOL,
+                       race = data.religion$RACE,
+                       fit = predict(model1_fit, data.religion))
+
+model1_data$fit_prob <- exp(model1_data$fit) / (1 + exp(model1_data$fit))
+
+ggplot(model1_data, aes(x = race, y = prob)) +
+  geom_point() +
+  geom_line(aes(x = race, y = fit_prob))
+
+# Income
+
+model2_fit <- glm(RELSCHOL ~ INCOME, family = binomial, data = data.religion)
+summary(model2_fit)
+
+intercept <- coef(model2_fit)[1]
+ie <- exp(intercept)
+round((ie / (1 + ie)), 3) * 100
+
+b1 <- coef(model2_fit)[2]
+be <- exp(b1)
+round(be / (1 + be), 3) * 100
+
+model2_data <- data.table(prob = data.religion$RELSCHOL,
+                       income = data.religion$INCOME,
+                       fit = predict(model2_fit, data.religion))
+
+model2_data$fit_prob <- exp(model2_data$fit) / (1 + exp(model1_data$fit))
+
+ggplot(model2_data, aes(x = income, y = prob)) +
+  geom_point() +
+  geom_line(aes(x = income, y = fit_prob)) +
+  labs( title = "Probability of Religious School by Income Bracket")
