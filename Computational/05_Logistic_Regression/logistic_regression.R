@@ -265,3 +265,4 @@ formattable(log_fit("Model 4", model4_fit), align = c("l", "c", "r"),
 ggplot(model4_data, aes(x = attend, y = prob)) +
   geom_point() +
   geom_line(aes(x = attend, y = fit_prob))
+
