@@ -250,11 +250,14 @@ model4_data <- data.table(prob = data.religion$RELSCHOL,
 
 model4_data$fit_prob <- exp(model4_data$fit) / (1 + exp(model4_data$fit))
 
-logits <- b0 + X1 * model4_data$race + X2 * model4_data$income + X3 * model4_data$attend
+X2_val <- mean(model4_data$income, na.rm = T)
+X3_val <- mean(model4_data$attend, na.rm = T)
+
+logits <- b0 + X1 * 0 + X2 * model4_data$income + X3 * X3_val
 
 model4_data[, pi := exp(logits) / (1 + exp(logits))]
 
-ggplot(model4_data, aes(attend, pi)) +
+ggplot(model4_data, aes(income, pi)) +
   geom_point() +
   labs(x = "X1", y = "P(outcome)", title = "Probability of Religious School by Attendance")
 
