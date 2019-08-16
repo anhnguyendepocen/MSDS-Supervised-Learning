@@ -174,13 +174,24 @@ b1 <- coef(model2_fit)[2]
 be <- exp(b1)
 round(be / (1 + be), 3) * 100
 
+model2_data <- data.religion[, .(prob = sum(RELSCHOL) / .N), by = INCOME]
+model2_data$fit <- predict(model2_fit, data.religion)
+
 model2_data <- data.table(prob = data.religion$RELSCHOL,
                        income = data.religion$INCOME,
-                       fit = predict(model2_fit, data.religion))
+                       fit = )
 
 model2_data$fit_prob <- exp(model2_data$fit) / (1 + exp(model1_data$fit))
+
+fit2 <- Logit(RELSCHOL ~ INCOME, family = binomial, data = data.religion)
+fit2
 
 ggplot(model2_data, aes(x = income, y = prob)) +
   geom_point() +
   geom_line(aes(x = income, y = fit_prob)) +
-  labs( title = "Probability of Religious School by Income Bracket")
+  labs(title = "Probability of Religious School by Income Bracket")
+
+formattable(log_fit("Model 2", model2_fit), align = c("l", "c", "r"),
+    list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+))
+
