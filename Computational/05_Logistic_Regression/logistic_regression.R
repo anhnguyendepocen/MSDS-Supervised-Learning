@@ -109,15 +109,22 @@ p2 <- ggplot(data.religion, aes(ATTEND, fill = ..count..)) +
 
 grid.arrange(p1, p2, nrow = 2)
 
-# Q3
-
-# Logistic Regression
-
-summary(data.religion)
+# Utility Functions
 
 log_fit <- function(name, fit) {
   return(data.table(Model = name, AIC = AIC(fit), BIC = BIC(fit)))
 }
+
+logit2prob <- function(logit) {
+  odds <- exp(logit)
+  prob <- round(odds / (1 + odds), 3)
+
+  return(prob)
+}
+
+# Logistic Regression
+
+summary(data.religion)
 
 model1_fit <- glm(RELSCHOL ~ RACE, family = binomial, data = data.religion)
 summary(model1_fit)
@@ -128,18 +135,15 @@ formattable(log_fit("Model 1", model1_fit), align = c("l", "c", "r"),
 
 # Race Coefficent
 
+logit2prob(coef(model1_fit))
+
 b0 <- coef(model1_fit)[1]
-b0_logit <- exp(b0)
-round((b0_logit / (1 + b0_logit)), 3) * 100 # convert to probability
+b0_odds <- round(exp(b0), 3) # convert to odds
+b0_odds
 
 X1 <- coef(model1_fit)[2]
 X1_logit <- exp(X1)
-round(X1_logit / (1 + X1_logit), 3) * 100 # convert to probability
-
-confint(model1_fit)
-confint.default(model1_fit)
-
-round(exp(cbind(OR = coef(model1_fit), confint(model1_fit))), 3)
+round((b0_logit - 1) * 100, 2) # convert to probability
 
 by_race <- data.religion[, .(Value = sum(RELSCHOL), Prob = sum(RELSCHOL) / .N, Count = .N), by = RACE]
 setorder(by_race, RACE)
@@ -163,6 +167,8 @@ ggplot(model1_data, aes(x = race, y = prob)) +
 
 model2_fit <- glm(RELSCHOL ~ INCOME, family = binomial, data = data.religion)
 summary(model2_fit)
+
+logit2prob(coef(model2_fit))
 
 model2_data <- data.table(prob = data.religion$RELSCHOL,
                        income = data.religion$INCOME,
@@ -197,6 +203,8 @@ max(model2_data$pi, na.rm = T)
 model3_fit <- glm(RELSCHOL ~ ATTEND, family = binomial, data = data.religion)
 summary(model3_fit)
 
+logit2prob(coef(model3_fit))
+
 b0 <- coef(model3_fit)[1]
 b0_logit <- exp(b0)
 round((b0_logit / (1 + b0_logit)), 3) * 100 # convert to probability
@@ -221,10 +229,19 @@ formattable(log_fit("Model 3", model3_fit), align = c("l", "c", "r"),
     list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
 ))
 
+xattend <- seq(0, 6, 0.01)
+yattend <- predict(model3_fit, list(ATTEND = xattend), type = "response")
+
+ggplot(data.table(xattend, yattend), aes(xattend, yattend)) +
+  geom_point() +
+  labs(x = "X1", y = "P(outcome)", title = "Probability of Religious School by Attendance")
+
 # Race + Income + Attend
 
 model4_fit <- glm(RELSCHOL ~ RACE + INCOME + ATTEND, family = binomial, data = data.religion)
 summary(model4_fit)
+
+logit2prob(coef(model4_fit))
 
 b0 <- coef(model4_fit)[1]
 b0_logit <- exp(b0)
@@ -240,6 +257,7 @@ round(X2_logit / (1 + X2_logit), 3) * 100 # convert to probability
 
 X3 <- coef(model4_fit)[4]
 X3_logit <- exp(X3)
+round((X3_logit - 1) * 100, 2)
 round(X3_logit / (1 + X3_logit), 3) * 100 # convert to probability
 
 model4_data <- data.table(prob = data.religion$RELSCHOL,
@@ -253,9 +271,15 @@ model4_data$fit_prob <- exp(model4_data$fit) / (1 + exp(model4_data$fit))
 X2_val <- mean(model4_data$income, na.rm = T)
 X3_val <- mean(model4_data$attend, na.rm = T)
 
-logits <- b0 + X1 * 0 + X2 * model4_data$income + X3 * X3_val
+logits <- b0 + X1 * data.religion$RACE + X2 * model4_data$income + X3 * model4_data$attend
+
+prob <- b0 + X1 * 1 + X2 * 4 + X3 * 5
+odds <- exp(prob)
+odds / (1 + odds)
 
 model4_data[, pi := exp(logits) / (1 + exp(logits))]
+
+max(model4_data$pi, na.rm = T)
 
 ggplot(model4_data, aes(income, pi)) +
   geom_point() +
@@ -269,3 +293,21 @@ ggplot(model4_data, aes(x = attend, y = prob)) +
   geom_point() +
   geom_line(aes(x = attend, y = fit_prob))
 
+# Research
+
+model.fit <- data.table(model1_fit = predict(model1_fit, data.religion), model2_fit = predict(model2_fit, data.religion), model3_fit = predict(model2_fit, data.religion))
+model.prob <- model.fit[, .(model1_prob = exp(model1_fit) / (1 + exp(model1_fit)),
+               model2_prob = exp(model2_fit) / (1 + exp(model2_fit)),
+               model3_prob = exp(model3_fit) / (1 + exp(model3_fit)))]
+
+model.pred <- model.prob[, .(model1_pred = model1_prob > .5, model2_pred = model2_prob > .5, model3_pred = model3_prob > .5)]
+model.pred <- model.pred[complete.cases(model.pred)]
+
+model.pivot <- melt(model.pred)
+
+pred.summary <- model.pivot[, .(Yes = sum(value) / .N, No = .N - sum(value)), by = c('variable')]
+colnames(pred.summary)[1] <- 'Model'
+
+formattable(pred.summary, align = c("l", "c", "r"),
+    list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+))
