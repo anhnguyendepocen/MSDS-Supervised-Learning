@@ -40,3 +40,88 @@ theme_update(plot.title = element_text(hjust = 0.5),
 
 # Data set of interest
 data.stress <- as.data.table(read.csv(file = "STRESS.csv", head = TRUE, sep = ","))
+
+# Stress Variable
+
+# Q1
+
+summary(data.stress$STRESS)
+
+ggplot(data.stress) +
+  geom_histogram(aes(STRESS, fill = ..count..)) +
+  labs(title = "Stress Distribution")
+
+ggplot(data.stress, aes(sample = STRESS)) +
+  stat_qq() +
+  stat_qq_line()
+
+p1 <- ggplot(data.stress) +
+  geom_histogram(aes(STRESS, fill = ..count..)) +
+  labs(title = "Stress Distribution vs Possion Distribution")
+
+p2 <- ggplot(data.frame(x = c(0:10)), aes(x)) +
+    geom_line(aes(y = dpois(x, 1)), colour = "red", lwd = 2)
+
+grid.arrange(p1, p2, nrow = 2)
+
+dist <- data.stress[, .(Count = .N / nrow(data.stress)), by = STRESS]
+dist[, Poisson := dpois(STRESS, 1)]
+
+ggplot(dist) +
+  geom_line(aes(STRESS, Count, color = "Stress"), lwd = 1.5) +
+  geom_line(aes(STRESS, Poisson, color = "Poisson"), lwd = 1.5, linetype = "dashed") +
+  labs(title = "Stress Distribution vs Possion Distribution") +
+  theme(legend.position = "bottom")
+
+# Q2
+
+model1_fit <- lm(formula = "STRESS ~ COHES + ESTEEM + GRADES + SATTACH", data = data.stress)
+summary(model1_fit)
+
+model1_data <- data.stress
+model1_data$pred <- predict(model1_fit)
+
+p1 <- ggplot(model1_data, aes(pred, fill = ..count..)) +
+  geom_histogram(breaks = pretty(model1_data$pred)) +
+  labs(title = "Histogram of Residuals")
+
+p2 <- ggplot(model1_data, aes(sample = pred)) +
+  geom_qq() +
+  geom_qq_line() +
+  labs(title = "Residual Distribution")
+
+grid.arrange(p1, p2, nrow = 2)
+
+ggplot(model1_data, aes(STRESS, pred)) +
+  geom_point() +
+  stat_smooth(method = "lm") +
+  labs( title = "Predicted Stress vs Actual")
+
+mean(data.stress$STRESS)
+
+# Q3
+
+model2_data <- data.stress[, .(STRESS, COHES, ESTEEM, GRADES, SATTACH)]
+model2_data$logSTRESS <- log(model2_data$STRESS)
+
+model2_fit <- lm(formula = "logSTRESS ~ COHES + ESTEEM + GRADES + SATTACH", data = model2_data)
+
+summary(model2_fit)
+
+model2_data$pred <- predict(model2_fit)
+
+p1 <- ggplot(model2_data, aes(pred, fill = ..count..)) +
+  geom_histogram(breaks = pretty(model1_data$pred)) +
+  labs(title = "Histogram of Residuals")
+
+p2 <- ggplot(model2_data, aes(sample = pred)) +
+  geom_qq() +
+  geom_qq_line() +
+  labs(title = "Residual Distribution")
+
+grid.arrange(p1, p2, nrow = 2)
+
+ggplot(model2_data, aes(STRESS, pred)) +
+  geom_point() +
+  stat_smooth(method = "lm") +
+  labs(title = "Predicted Stress vs Actual")
