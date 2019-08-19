@@ -102,6 +102,7 @@ mean(data.stress$STRESS)
 # Q3
 
 model2_data <- data.stress[, .(STRESS, COHES, ESTEEM, GRADES, SATTACH)]
+model2_data$STRESS <- model2_data$STRESS + 0.001 # remove zeros to enable log transformation
 model2_data$logSTRESS <- log(model2_data$STRESS)
 
 model2_fit <- lm(formula = "logSTRESS ~ COHES + ESTEEM + GRADES + SATTACH", data = model2_data)
@@ -122,6 +123,30 @@ p2 <- ggplot(model2_data, aes(sample = pred)) +
 grid.arrange(p1, p2, nrow = 2)
 
 ggplot(model2_data, aes(STRESS, pred)) +
+  geom_point() +
+  stat_smooth(method = "lm") +
+  labs(title = "Predicted Stress vs Actual")
+
+# 4.)
+
+model3_data <- data.stress[, .(STRESS, COHES, ESTEEM, GRADES, SATTACH)]
+model3_fit <- glm(formula = "STRESS ~ COHES + ESTEEM + GRADES + SATTACH", family = poisson, data = model3_data)
+summary(model3_fit)
+
+model3_data$pred <- predict(model3_fit)
+
+p1 <- ggplot(model3_data, aes(pred, fill = ..count..)) +
+  geom_histogram(breaks = pretty(model1_data$pred)) +
+  labs(title = "Histogram of Residuals")
+
+p2 <- ggplot(model3_data, aes(sample = pred)) +
+  geom_qq() +
+  geom_qq_line() +
+  labs(title = "Residual Distribution")
+
+grid.arrange(p1, p2, nrow = 2)
+
+ggplot(model3_data, aes(STRESS, pred)) +
   geom_point() +
   stat_smooth(method = "lm") +
   labs(title = "Predicted Stress vs Actual")
