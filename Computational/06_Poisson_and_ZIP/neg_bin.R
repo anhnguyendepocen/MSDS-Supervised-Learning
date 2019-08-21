@@ -1,4 +1,4 @@
-# https: / / stats.idre.ucla.edu / r / dae / negative - binomial - regression /
+# https://stats.idre.ucla.edu/r/dae/negative-binomial-regression/
 
 require(foreign)
 require(ggplot2)
