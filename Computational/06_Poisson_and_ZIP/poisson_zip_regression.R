@@ -15,6 +15,7 @@ library(sjmisc)
 library(car)
 library(WVPlots)
 library(lessR)
+library(MASS)
 
 #####################################################################
 ######################### Computation 6 #############################
@@ -181,4 +182,43 @@ b4 <- coef(model3_fit)[5]
 b4_exp <- round(exp(b4), 3)
 1 - b4_exp
 
+
+model4_data <- data.stress[, .(STRESS, COHES, ESTEEM, GRADES, SATTACH)]
+summary(model4_fit <- glm.nb(STRESS ~ COHES + ESTEEM + GRADES + SATTACH, data = model4_data, maxit = 100000))
+
+round(coef(model4_fit), 3)
+
+AIC(model3_fit) - AIC(model4_fit)
+
+# 5
+
+values <- data.stress$COHES
+val.mean <- mean(values)
+val.sd <- sd(values)
+
+dt.cutoff <- data.table(Low = val.mean - val.sd, Medium = val.mean + val.sd)
+
+model5_data <- data.stress
+model5_data$Group <- ifelse(model5_data$COHES > dt.cutoff$Medium, 3, ifelse(model5_data$COHES < dt.cutoff$Low, 1, 2))
+
+# Verify Cut-points
+ggplot(model5_data, aes(COHES, Group)) +
+  geom_point()
+
+b2_val <- mean(data.stress$ESTEEM)
+b3_val <- mean(data.stress$GRADES)
+b4_val <- mean(data.stress$SATTACH)
+
+# Low
+
+low <- round(exp(b0 + b1 * dt.cutoff$Low + b2 * b2_val + b3 * b3_val + b4 * b4_val), 3)
+
+high <- round(exp(b0 + b1 * dt.cutoff$Medium + b2 * b2_val + b3 * b3_val + b4 * b4_val), 3)
+
+(high - low) / low
+
+ggplot(low.cohes, aes(STRESS, pred)) +
+  geom_point()
+
+# 6
 
