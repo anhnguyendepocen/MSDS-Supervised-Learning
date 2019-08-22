@@ -146,7 +146,39 @@ p2 <- ggplot(model3_data, aes(sample = pred)) +
 
 grid.arrange(p1, p2, nrow = 2)
 
-ggplot(model3_data, aes(STRESS, pred)) +
-  geom_point() +
-  stat_smooth(method = "lm") +
-  labs(title = "Predicted Stress vs Actual")
+b0 <- coef(model3_fit)[1]
+b0_exp <- exp(b0)
+
+summary(model3_data$STRESS)
+
+p1 <- ggplot(data.stress, aes(STRESS, fill = ..count..)) +
+  geom_histogram()
+
+p2 <- ggplot(data.stress, aes(COHES, fill = ..count..)) +
+  geom_histogram()
+
+p3 <- ggplot(data.stress, aes(ESTEEM, fill = ..count..)) +
+  geom_histogram()
+
+p4 <- ggplot(data.stress, aes(SATTACH, fill = ..count..)) +
+  geom_histogram()
+
+grid.arrange(p1, p2, p3, p4, nrow = 2)
+
+b1 <- coef(model3_fit)[2]
+b1_exp <- round(exp(b1), 3)
+1 - b1_exp
+
+b2 <- coef(model3_fit)[3]
+b2_exp <- round(exp(b2), 3)
+1 - b2_exp
+
+b3 <- coef(model3_fit)[4]
+b3_exp <- round(exp(b3), 3)
+1 - b3_exp
+
+b4 <- coef(model3_fit)[5]
+b4_exp <- round(exp(b4), 3)
+1 - b4_exp
+
+
