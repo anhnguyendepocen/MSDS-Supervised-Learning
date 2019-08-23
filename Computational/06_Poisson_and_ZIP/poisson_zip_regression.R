@@ -134,7 +134,7 @@ model3_data <- data.stress[, .(STRESS, COHES, ESTEEM, GRADES, SATTACH)]
 model3_fit <- glm(formula = "STRESS ~ COHES + ESTEEM + GRADES + SATTACH", family = poisson, data = model3_data)
 summary(model3_fit)
 
-model3_data$pred <- predict(model3_fit)
+model3_data$pred <- predict(model3_fit, type = "response")
 
 p1 <- ggplot(model3_data, aes(pred, fill = ..count..)) +
   geom_histogram(breaks = pretty(model1_data$pred)) +
@@ -221,4 +221,32 @@ ggplot(low.cohes, aes(STRESS, pred)) +
   geom_point()
 
 # 6
+
+get.ic <- function(name, fit) {
+  data.table(Model = name, AIC = AIC(fit), BIC = BIC(fit))
+}
+
+formattable(rbind(get.ic('Model 3', model3_fit), get.ic('Model 4', model4_fit)), align = c("l", "c", "c", "r"),
+    list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+))
+
+# 6
+
+model3_data$pred <- log(predict(model3_fit, type = "response"))
+model3_data$deviation <- resid(model3_fit, type = "deviance")
+
+ggplot(model3_data, aes(deviation, fill = ..count..)) +
+  geom_histogram()
+
+p1 <- ggplot(model3_data, aes(pred, deviation)) +
+  geom_point() +
+  geom_hline(aes(yintercept = 0, col = "red"), lwd = 1) +
+  labs(title = "Predicted vs Deviation")
+
+p2 <- ggplot(model3_data, aes(sample = model3_data$deviation)) +
+  geom_qq() +
+  geom_qq_line()
+
+grid.arrange(p1, p2, nrow = 2)
+
 
