@@ -15,6 +15,7 @@ library(sjmisc)
 library(car)
 library(WVPlots)
 library(lessR)
+library(MASS)
 
 #####################################################################
 ######################### Computation 6 #############################
@@ -133,7 +134,7 @@ model3_data <- data.stress[, .(STRESS, COHES, ESTEEM, GRADES, SATTACH)]
 model3_fit <- glm(formula = "STRESS ~ COHES + ESTEEM + GRADES + SATTACH", family = poisson, data = model3_data)
 summary(model3_fit)
 
-model3_data$pred <- predict(model3_fit)
+model3_data$pred <- predict(model3_fit, type = "response")
 
 p1 <- ggplot(model3_data, aes(pred, fill = ..count..)) +
   geom_histogram(breaks = pretty(model1_data$pred)) +
@@ -146,7 +147,106 @@ p2 <- ggplot(model3_data, aes(sample = pred)) +
 
 grid.arrange(p1, p2, nrow = 2)
 
-ggplot(model3_data, aes(STRESS, pred)) +
+b0 <- coef(model3_fit)[1]
+b0_exp <- exp(b0)
+
+summary(model3_data$STRESS)
+
+p1 <- ggplot(data.stress, aes(STRESS, fill = ..count..)) +
+  geom_histogram()
+
+p2 <- ggplot(data.stress, aes(COHES, fill = ..count..)) +
+  geom_histogram()
+
+p3 <- ggplot(data.stress, aes(ESTEEM, fill = ..count..)) +
+  geom_histogram()
+
+p4 <- ggplot(data.stress, aes(SATTACH, fill = ..count..)) +
+  geom_histogram()
+
+grid.arrange(p1, p2, p3, p4, nrow = 2)
+
+b1 <- coef(model3_fit)[2]
+b1_exp <- round(exp(b1), 3)
+1 - b1_exp
+
+b2 <- coef(model3_fit)[3]
+b2_exp <- round(exp(b2), 3)
+1 - b2_exp
+
+b3 <- coef(model3_fit)[4]
+b3_exp <- round(exp(b3), 3)
+1 - b3_exp
+
+b4 <- coef(model3_fit)[5]
+b4_exp <- round(exp(b4), 3)
+1 - b4_exp
+
+
+model4_data <- data.stress[, .(STRESS, COHES, ESTEEM, GRADES, SATTACH)]
+summary(model4_fit <- glm.nb(STRESS ~ COHES + ESTEEM + GRADES + SATTACH, data = model4_data, maxit = 100000))
+
+round(coef(model4_fit), 3)
+
+AIC(model3_fit) - AIC(model4_fit)
+
+# 5
+
+values <- data.stress$COHES
+val.mean <- mean(values)
+val.sd <- sd(values)
+
+dt.cutoff <- data.table(Low = val.mean - val.sd, Medium = val.mean + val.sd)
+
+model5_data <- data.stress
+model5_data$Group <- ifelse(model5_data$COHES > dt.cutoff$Medium, 3, ifelse(model5_data$COHES < dt.cutoff$Low, 1, 2))
+
+# Verify Cut-points
+ggplot(model5_data, aes(COHES, Group)) +
+  geom_point()
+
+b2_val <- mean(data.stress$ESTEEM)
+b3_val <- mean(data.stress$GRADES)
+b4_val <- mean(data.stress$SATTACH)
+
+# Low
+
+low <- round(exp(b0 + b1 * dt.cutoff$Low + b2 * b2_val + b3 * b3_val + b4 * b4_val), 3)
+
+high <- round(exp(b0 + b1 * dt.cutoff$Medium + b2 * b2_val + b3 * b3_val + b4 * b4_val), 3)
+
+(high - low) / low
+
+ggplot(low.cohes, aes(STRESS, pred)) +
+  geom_point()
+
+# 6
+
+get.ic <- function(name, fit) {
+  data.table(Model = name, AIC = AIC(fit), BIC = BIC(fit))
+}
+
+formattable(rbind(get.ic('Model 3', model3_fit), get.ic('Model 4', model4_fit)), align = c("l", "c", "c", "r"),
+    list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+))
+
+# 6
+
+model3_data$pred <- log(predict(model3_fit, type = "response"))
+model3_data$deviation <- resid(model3_fit, type = "deviance")
+
+ggplot(model3_data, aes(deviation, fill = ..count..)) +
+  geom_histogram()
+
+p1 <- ggplot(model3_data, aes(pred, deviation)) +
   geom_point() +
-  stat_smooth(method = "lm") +
-  labs(title = "Predicted Stress vs Actual")
+  geom_hline(aes(yintercept = 0, col = "red"), lwd = 1) +
+  labs(title = "Predicted vs Deviation")
+
+p2 <- ggplot(model3_data, aes(sample = model3_data$deviation)) +
+  geom_qq() +
+  geom_qq_line()
+
+grid.arrange(p1, p2, nrow = 2)
+
+
