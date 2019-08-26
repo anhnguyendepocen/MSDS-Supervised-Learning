@@ -250,3 +250,5 @@ p2 <- ggplot(model3_data, aes(sample = model3_data$deviation)) +
 grid.arrange(p1, p2, nrow = 2)
 
 
+deviance(model3_fit) / model3_fit$df.residual
+dispersiontest(model3_fit)
