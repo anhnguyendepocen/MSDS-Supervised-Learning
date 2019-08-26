@@ -98,6 +98,10 @@ ggplot(data.wine, aes(LabelAppeal, fill = ..count..)) +
 
 data.stars <- data.wine[!is.na(STARS)]
 
+# Poisson Distribution
+ggplot(data.wine, aes(STARS, fill = ..count..)) +
+  geom_histogram()
+
 skim(data.stars)
 
 #####################################################################
@@ -115,4 +119,3 @@ ggplot(data.wine, aes(Purchase, fill = ..count..)) +
 
 ggplot(data.wine, aes(Cases, fill = ..count..)) +
   geom_histogram()
-
