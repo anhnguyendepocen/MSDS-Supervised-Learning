@@ -55,4 +55,3 @@ BoxPlot(MVR_PTS, by1 = TARGET_FLAG, data = mydata)
 ttest(x = TARGET_FLAG, y = MVR_PTS)
 
 ANOVA(TARGET_FLAG ~ age_cat, data = mydata)
-
