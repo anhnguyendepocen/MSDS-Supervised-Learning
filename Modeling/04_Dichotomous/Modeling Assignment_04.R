@@ -138,6 +138,8 @@ getDistribution(data.wine, data.wine$Sulphates, 'Sulphates')
 
 getDistribution(data.wine, data.wine$VolatileAcidity, 'Volatile Acidity')
 
+getDistribution(data.wine, log(data.wine$CitricAcid), 'Volatile Acidity')
+
 # Label Appeal, Normal Discrete
 
 ggplot(data.wine, aes(LabelAppeal, fill = ..count..)) +
@@ -183,6 +185,38 @@ str(data.wine.numeric)
 
 getCorTable(data.wine.numeric)
 
+simple_cor_test <- function(x, y) {
+  return(cor.test(x, as.numeric(y))$estimate)
+}
+
+correlations <- c(
+  simple_cor_test(data.wine$FixedAcidity, data.wine$STARS),
+  simple_cor_test(data.wine$VolatileAcidity, data.wine$STARS),
+  simple_cor_test(data.wine$CitricAcid, data.wine$STARS),
+  simple_cor_test(data.wine$ResidualSugar, data.wine$STARS),
+  simple_cor_test(data.wine$Chlorides, data.wine$STARS),
+  simple_cor_test(data.wine$Sulphates, data.wine$STARS),
+  simple_cor_test(data.wine$Density, data.wine$STARS),
+  simple_cor_test(data.wine$pH, data.wine$STARS),
+  simple_cor_test(data.wine$Alcohol, data.wine$STARS))
+
+names(correlations) <- c('fixed.acidity', 'volatile.acidity', 'citric.acid',
+                         'residual.sugar', 'chlordies', 
+                         'sulphates', 'density', 
+                         'pH', 'alcohol')
+
+correlations
+
+ggplot(data = data.wine,
+       aes(y = Density, x = Alcohol,
+           color = quality)) +
+           geom_point(alpha = 0.8, size = 1) +
+           geom_smooth(method = "lm", se = FALSE, size = 1) +
+           scale_color_brewer(type = 'seq',
+                   guide = guide_legend(title = 'Quality'))
+
+# Bivariate Plots
+
 ggplot(data = data.wine, aes(x = STARS, y = FixedAcidity, group = STARS)) +
   geom_jitter(alpha = .3) +
   geom_boxplot(alpha = .5, color = 'blue') +
@@ -202,6 +236,42 @@ ggplot(data = data.wine, aes(x = STARS, y = LabelAppeal, group = STARS)) +
                size = 4)
 
 ggplot(data = data.wine, aes(x = STARS, y = VolatileAcidity, group = STARS)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = data.wine, aes(x = STARS, y = ResidualSugar, group = STARS)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = data.wine, aes(x = STARS, y = TotalSulfurDioxide, group = STARS)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = data.wine, aes(x = STARS, y = pH, group = STARS)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = data.wine, aes(x = STARS, y = CitricAcid, group = STARS)) +
   geom_jitter(alpha = .3) +
   geom_boxplot(alpha = .5, color = 'blue') +
   stat_summary(fun.y = "mean",
