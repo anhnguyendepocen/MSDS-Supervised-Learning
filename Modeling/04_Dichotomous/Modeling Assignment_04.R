@@ -58,14 +58,17 @@ data.wine$LabelAppeal <- data.wine$LabelAppeal + 3
 ggplot(data.wine, aes(LabelAppeal, fill = ..count..)) +
   geom_histogram()
 
+alcohol.removed <- nrow(data.wine[Alcohol < 0 | is.na(Alcohol)])
+
+# Remove negative ABV values.
+data.wine <- data.wine[Alcohol >= 0]
+
+alcohol.removed / nrow(data.wine)
+
 # Binary Good/Bad Quality Indicator
 
 data.wine$Quality <- ifelse(data.wine$STARS >= 3, "Good", "Bad")
 data.wine$Quality <- as.factor(data.wine$Quality)
-
-# Remove wines withs negative alcohol content, must be data errors
-
-data.wine <- data.wine[Alcohol > 0]
 
 # Negative Value Removal
 
@@ -103,13 +106,13 @@ getDistribution <- function(data, col, lab) {
 
 # ggpairs(data.wine)
 
+normalize <- function(var) {
+  (var - mean(var, na.rm = T)) / sd(var, na.rm = T)
+}
+
 # Alcohol, Continious
 
-getDistribution(data.nonneg, data.nonneg$Alcohol, 'Alcohol')
-
 getDistribution(data.wine, data.wine$Alcohol, 'Alcohol')
-
-getDistribution(data.complete, data.complete$Alcohol, 'Alcohol')
 
 ggplot(data.wine, aes(x = Alcohol, fill = Quality)) +
   geom_density(alpha = .3)
@@ -125,23 +128,77 @@ ggplot(data.wine, aes(Alcohol, fill = LabelAppeal, colour = LabelAppeal)) +
 ggplot(data.wine, aes(x = Chlorides, fill = Quality)) +
   geom_density(alpha = .3)
 
+summary(data.wine$Chlorides)
+
+data.wine$Norm_Chlorides <- scale(data.wine$Chlorides)
+
 getDistribution(data.wine, data.wine$Chlorides, 'Chlorides')
 
-getDistribution(data.complete, data.complete$Chlorides, 'Chlorides')
-
-standardize
-
 # CitricAcid, Continuous
+
+summary(data.wine$CitricAcid)
+
+data.wine$Norm_CitricAcid <- scale(data.wine$CitricAcid)
 
 ggplot(data.wine, aes(x = CitricAcid, fill = Quality)) +
   geom_density(alpha = .3)
 
 getDistribution(data.wine, data.wine$CitricAcid, 'Citric Acid')
 
-getDistribution(data.nonneg, log(data.nonneg$CitricAcid), 'Citric Acid')
-getDistribution(data.nonneg, data.nonneg$CitricAcid, 'Citric Acid')
+# Fixed Acidity
 
-getDistribution(data.complete, data.complete$CitricAcid, 'Citric Acid')
+data.wine$Norm_FixedAcidity <- scale(data.wine$FixedAcidity)
+
+summary(data.wine$FixedAcidity)
+
+ggplot(data.wine, aes(x = FixedAcidity, fill = Quality)) +
+  geom_density(alpha = .3)
+
+getDistribution(data.wine, data.wine$FixedAcidity, 'Fixed Acidity')
+
+getDistribution(data.wine, scale(data.wine$FixedAcidity), 'Fixed Acidity')
+
+# Free Sulfur Dioxide, Continuous
+
+data.wine$Norm_FreeSulfurDioxide <- scale(data.wine$FreeSulfurDioxide)
+
+ggplot(data.wine, aes(x = FreeSulfurDioxide, fill = Quality)) +
+  geom_density(alpha = .3)
+
+getDistribution(data.wine, data.wine$FreeSulfurDioxide, 'Free-Sulfur Dioxide')
+
+getDistribution(data.wine, data.wine$Norm_FSD, 'Free-Sulfur Dioxide')
+
+# ResidualSugar, Continious
+
+data.wine$Norm_ResidualSugar <- scale(data.wine$ResidualSugar)
+
+getDistribution(data.wine, data.wine$ResidualSugar, 'ResidualSugar')
+
+getDistribution(data.wine, data.wine$Norm_ResidualSugar, 'ResidualSugar')
+
+# Total Sulfur Dioxide, Continious
+
+data.wine$Norm_TotalSulfurDioxide <- scale(data.wine$TotalSulfurDioxide)
+
+getDistribution(data.wine, data.wine$TotalSulfurDioxide, 'Total Sulfur Dioxide')
+
+getDistribution(data.wine, data.wine$Norm_TotalSulfurDioxide, 'Total Sulfur Dioxide')
+
+# Sulphates, Continious
+
+summary(data.wine$Sulphates)
+
+data.wine$Norm_Sulphates <- 
+getDistribution(data.wine, data.wine$Sulphates, 'Sulphates')
+
+# Volatile Acidity, Continuous
+
+summary(data.wine$VolatileAcidity)
+
+data.wine$Norm_VolAcidity <- scale(data.wine$VolatileAcidity)
+
+getDistribution(data.wine, data.wine$VolatileAcidity, 'Volatile Acidity')
 
 # Density, Continious
 
@@ -154,53 +211,12 @@ getDistribution(data.nonneg, data.nonneg$Density, 'Density')
 
 getDistribution(data.complete, data.complete$Density, 'Density')
 
-# Fixed Acidity
-ggplot(data.wine, aes(x = FixedAcidity, fill = Quality)) +
-  geom_density(alpha = .3)
-
-getDistribution(data.wine, data.wine$FixedAcidity, 'Fixed Acidity')
-
-getDistribution(data.complete, data.complete$FixedAcidity, 'Fixed Acidity')
-
-getDistribution(data.nonneg, data.nonneg$FixedAcidity, 'Fixed Acidity')
-
-# Free Sulfur Dioxide, Continuous
-
-ggplot(data.wine, aes(x = FreeSulfurDioxide, fill = Quality)) +
-  geom_density(alpha = .3)
-
-getDistribution(data.wine, data.wine$FreeSulfurDioxide, 'Free-Sulfur Dioxide')
-
-getDistribution(data.wine, sqrt(data.wine$FreeSulfurDioxide), 'Free-Sulfur Dioxide')
-getDistribution(data.wine, log(data.wine$FreeSulfurDioxide), 'Free-Sulfur Dioxide')
-getDistribution(data.wine, log10(data.wine$FreeSulfurDioxide), 'Free-Sulfur Dioxide')
-
 # pH, Continious
 
 ggplot(data.wine, aes(x = pH, fill = Quality)) +
   geom_density(alpha = .3)
 
 getDistribution(data.wine, data.wine$pH, 'pH')
-
-# ResidualSugar, Continious
-
-getDistribution(data.wine, data.wine$ResidualSugar, 'ResidualSugar')
-
-# Total Sulfur Dioxide, Continious
-
-getDistribution(data.wine, data.wine$TotalSulfurDioxide, 'Total Sulfur Dioxide')
-
-# Sulphates, Continious
-
-getDistribution(data.wine, data.wine$Sulphates, 'Sulphates')
-
-# Volatile Acidity, Continuous
-
-getDistribution(data.wine, data.wine$VolatileAcidity, 'Volatile Acidity')
-
-getDistribution(data.nonneg, data.nonneg$VolatileAcidity, 'Volatile Acidity')
-
-getDistribution(data.wine, log(data.wine$CitricAcid), 'Volatile Acidity')
 
 # Label Appeal, Normal Discrete
 
@@ -221,22 +237,22 @@ ggplot(data.nonneg, aes(STARS, VolatileAcidity, group = STARS, fill = STARS)) +
   geom_boxplot()
 
 ggplot(data.wine, aes(STARS, VolatileAcidity, group = STARS, fill = STARS)) +
-  geom_boxplot()
+  geom_boxplot(varwidth = T)
 
 ggplot(data.wine, aes(STARS, TotalSulfurDioxide, group = STARS, fill = STARS)) +
-  geom_boxplot()
+  geom_boxplot(varwidth = T)
 
 ggplot(data.nonneg, aes(STARS, TotalSulfurDioxide, group = STARS, fill = STARS)) +
   geom_boxplot()
 
 ggplot(data.wine, aes(STARS, Sulphates, group = STARS, fill = STARS)) +
-  geom_boxplot()
+  geom_boxplot(varwidth = T)
 
 ggplot(data.wine, aes(STARS, FixedAcidity, group = STARS, fill = STARS)) +
-  geom_boxplot()
+  geom_boxplot(varwidth = T)
 
 ggplot(data.wine, aes(STARS, ResidualSugar, group = STARS, fill = STARS)) +
-  geom_boxplot()
+  geom_boxplot(varwidth = T)
 
 ggplot(data.nonneg, aes(STARS, ResidualSugar, group = STARS, fill = STARS)) +
   geom_boxplot()
