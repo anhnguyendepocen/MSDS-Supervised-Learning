@@ -109,6 +109,8 @@ getDistribution(data.nonneg, data.nonneg$Alcohol, 'Alcohol')
 
 getDistribution(data.wine, data.wine$Alcohol, 'Alcohol')
 
+getDistribution(data.complete, data.complete$Alcohol, 'Alcohol')
+
 ggplot(data.wine, aes(x = Alcohol, fill = Quality)) +
   geom_density(alpha = .3)
 
@@ -125,6 +127,8 @@ ggplot(data.wine, aes(x = Chlorides, fill = Quality)) +
 
 getDistribution(data.wine, data.wine$Chlorides, 'Chlorides')
 
+getDistribution(data.complete, data.complete$Chlorides, 'Chlorides')
+
 standardize
 
 # CitricAcid, Continuous
@@ -137,6 +141,8 @@ getDistribution(data.wine, data.wine$CitricAcid, 'Citric Acid')
 getDistribution(data.nonneg, log(data.nonneg$CitricAcid), 'Citric Acid')
 getDistribution(data.nonneg, data.nonneg$CitricAcid, 'Citric Acid')
 
+getDistribution(data.complete, data.complete$CitricAcid, 'Citric Acid')
+
 # Density, Continious
 
 ggplot(data.wine, aes(x = Density, fill = Quality)) +
@@ -146,11 +152,17 @@ getDistribution(data.wine, data.wine$Density, 'Density')
 
 getDistribution(data.nonneg, data.nonneg$Density, 'Density')
 
+getDistribution(data.complete, data.complete$Density, 'Density')
+
 # Fixed Acidity
 ggplot(data.wine, aes(x = FixedAcidity, fill = Quality)) +
   geom_density(alpha = .3)
 
 getDistribution(data.wine, data.wine$FixedAcidity, 'Fixed Acidity')
+
+getDistribution(data.complete, data.complete$FixedAcidity, 'Fixed Acidity')
+
+getDistribution(data.nonneg, data.nonneg$FixedAcidity, 'Fixed Acidity')
 
 # Free Sulfur Dioxide, Continuous
 
@@ -320,6 +332,26 @@ PairPlot(data.wine,
 
 # Quality
 
+ggplot(data = data.nonneg, aes(x = Quality, y = FixedAcidity, group = Quality)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = data.complete, aes(x = Quality, y = FixedAcidity, group = Quality)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
 ggplot(data = data.wine, aes(x = Quality, y = FixedAcidity, group = Quality)) +
   geom_jitter(alpha = .3) +
   geom_boxplot(alpha = .5, color = 'blue') +
@@ -350,6 +382,15 @@ ggplot(data = data.wine, aes(x = STARS, y = FixedAcidity, group = STARS)) +
   geom_jitter(alpha = .3) +
   geom_boxplot(alpha = .5, color = 'blue') +
   geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = data.nonneg, aes(x = STARS, y = LabelAppeal, group = STARS)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
   stat_summary(fun.y = "mean",
                geom = "point",
                color = "red",
