@@ -151,6 +151,65 @@ ggplot(data.wine, aes(AcidIndex, fill = ..count..)) +
 
 getDistribution(data.wine, data.wine$AcidIndex, 'Acid Index')
 
+# Relationships
+
+ggplot(data.wine, aes(STARS, VolatileAcidity, group = STARS, fill = STARS)) +
+  geom_boxplot()
+
+data.wine[, .(Count = sum(.N)), by = c("STARS")]
+
+getCorTable <- function(cols) {
+  # selected features correlation matrix
+  sale.cor <- cor(cols, use = "pairwise.complete.obs")[, "STARS"]
+  sale.cor <- sort(sale.cor, decreasing = T)
+
+  sale.cor <- sale.cor[-1] # remove SalePrice
+  sale.cor <- sale.cor[-1] # remove LogSalePrice
+
+  tbl.sale.cor <- melt(sale.cor)
+  colnames(tbl.sale.cor) <- c("Correlation to STARS")
+
+  formattable(tbl.sale.cor, align = c("l", "r"),
+              list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+  ))
+}
+
+# Model Data Correlations
+
+model.numeric.col <- unlist(lapply(data.wine, is.numeric))
+data.wine.numeric <- data.wine[, model.numeric.col, with = F]
+
+str(data.wine.numeric)
+
+getCorTable(data.wine.numeric)
+
+ggplot(data = data.wine, aes(x = STARS, y = FixedAcidity, group = STARS)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = data.wine, aes(x = STARS, y = LabelAppeal, group = STARS)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = data.wine, aes(x = STARS, y = VolatileAcidity, group = STARS)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
 #####################################################################
 ### Response, STARS
 
