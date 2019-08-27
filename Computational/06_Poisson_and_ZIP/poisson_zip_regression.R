@@ -16,6 +16,7 @@ library(car)
 library(WVPlots)
 library(lessR)
 library(MASS)
+library(pscl)
 
 #####################################################################
 ######################### Computation 6 #############################
@@ -241,7 +242,9 @@ ggplot(model3_data, aes(deviation, fill = ..count..)) +
 p1 <- ggplot(model3_data, aes(pred, deviation)) +
   geom_point() +
   geom_hline(aes(yintercept = 0, col = "red"), lwd = 1) +
-  labs(title = "Predicted vs Deviation")
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Deviation vs Fitted") +
+  theme(legend.position = 'none')
 
 p2 <- ggplot(model3_data, aes(sample = model3_data$deviation)) +
   geom_qq() +
@@ -249,6 +252,118 @@ p2 <- ggplot(model3_data, aes(sample = model3_data$deviation)) +
 
 grid.arrange(p1, p2, nrow = 2)
 
+ggplot(model3_data, aes(STRESS, GRADES)) +
+  geom_point() +
+  geom_smooth(method = "glm", method.args = list(family = "poisson"), se = TRUE)
 
-deviance(model3_fit) / model3_fit$df.residual
-dispersiontest(model3_fit)
+
+1 - pchisq(model3_fit$deviance, model3_fit$df.residual) # GOF test
+
+# 8
+
+logit2prob <- function(logit) {
+  odds <- exp(logit)
+  prob <- round(odds / (1 + odds), 3)
+
+  return(prob)
+}
+
+data.stress$Y_IND <- ifelse(data.stress$STRESS == 0, 0, 1)
+
+summary(model5_fit <- glm(Y_IND ~ COHES + ESTEEM + GRADES + SATTACH, family = binomial, data = data.stress))
+
+round(coef(model5_fit), 3)
+
+logit2prob(coef(model5_fit))
+
+b0 <- coef(model5_fit)[1]
+b0_logit <- exp(b0)
+round(b0_logit, 3)
+round((b0_logit / (1 + b0_logit)), 3) * 100 # convert to probability
+
+ggplot(data.stress, aes(Y_IND, STRESS)) +
+  geom_point()
+
+# COHES
+X1 <- coef(model5_fit)[2]
+X1_logit <- exp(X1)
+round(X1_logit - 1, 3) * 100
+round(X1_logit / (1 + X1_logit), 3) * 100 # convert to probability
+
+# ESTEEM
+X2 <- coef(model5_fit)[3]
+X2_logit <- exp(X2)
+round(X2_logit - 1, 3) * 100
+round(X2_logit / (1 + X2_logit), 3) * 100 # convert to probability
+
+# GRADES
+
+X3 <- coef(model5_fit)[4]
+X3_logit <- exp(X3)
+round((X3_logit - 1) * 100, 2)
+round(X3_logit / (1 + X3_logit), 3) * 100 # convert to probability
+
+# SATTACH
+
+X4 <- coef(model5_fit)[5]
+X4_logit <- exp(X4)
+round((X4_logit - 1) * 100, 2)
+round(X4_logit / (1 + X4_logit), 3) * 100 # convert to probability
+
+# 9
+
+model6_data <- data.stress[, .(Y_IND, STRESS, COHES, ESTEEM, GRADES, SATTACH)]
+
+summary(zip1 <- glm(formula = Y_IND ~ COHES + ESTEEM + GRADES + SATTACH, family = "binomial", data = data.stress))
+anova(zip1)
+
+round(coef(zip1), 3)
+
+y_hatzip1 <- 3.516735 -0.020733 * data.stress$COHES - 0.018867 * data.stress$ESTEEM - 0.025492 * data.stress$GRADES - 0.027730 * data.stress$SATTACH
+zipodds <- exp(y_hatzip1)
+prob_hatzip1 <- zipodds / (1 + zipodds)
+
+ggplot(data.table(Value = y_hatzip1), aes(Value, fill = ..count..)) +
+  geom_histogram()
+
+summary(zipfit2 <- glm(formula = STRESS ~ COHES + ESTEEM + GRADES + SATTACH, family = poisson, data = data.stress))
+
+round(coef(zipfit2), 3)
+
+y_hatzip2 <- 2.734513 - 0.012918 * data.stress$COHES - 0.023692 * data.stress$ESTEEM - 0.023471 * data.stress$GRADES - 0.016481 * data.stress$SATTACH
+pred_hatzip2 <- exp(y_hatzip2)
+
+model6_data$pred <- ifelse(prob_hatzip1 < 0.50, 0, pred_hatzip2)
+model6_data$residual <- resid(zipfit2, type = "deviance")
+
+ggplot(model6_data, aes(pred, STRESS)) +
+  geom_point() +
+  geom_hline(aes(yintercept = 0, col = "red"), lwd = 1) +
+   geom_smooth(method = "glm", method.args = list(family = "poisson"), se = TRUE) +
+  labs(title = "Predicted vs Actual") +
+  theme(legend.position = 'none')
+
+p1 <- ggplot(model6_data, aes(sample = pred)) +
+  geom_qq() +
+  geom_qq_line()
+
+p2 <- ggplot(model6_data, aes(residual, fill = ..count..)) +
+  geom_histogram()
+
+grid.arrange(p1, p2, nrow = 2)
+
+# 10
+
+summary(data.stress)
+
+summary(zero1 <- zeroinfl(STRESS ~ COHES + ESTEEM + GRADES + SATTACH, data = data.stress))
+summary(zero2 <- zeroinfl(STRESS ~ COHES + ESTEEM + GRADES + SATTACH, dist = "negbin", data = data.stress))
+
+str(data.stress)
+
+AIC(zero1)
+
+AIC(zero2)
+
+
+vuong(zero1, zero2)
