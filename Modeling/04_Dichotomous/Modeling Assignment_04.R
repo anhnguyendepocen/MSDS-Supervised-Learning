@@ -18,6 +18,7 @@ library(lessR)
 library(MASS)
 library(RColorBrewer)
 library(ggcorrplot)
+library(glmulti)
 
 #####################################################################
 #########################   Modeling 4  #############################
@@ -224,14 +225,6 @@ getCorTable <- function(cols) {
   ))
 }
 
-# Correlation matrix
-ggcorrplot(round(cor(data.wine.numeric[, 1:16]), 1),
-           type = "lower",
-           method = "circle",
-           colors = c("tomato2", "white", "springgreen3"),
-           lab_size = 3,
-           title = "Correlogram of Wine Metrics")
-
 skim(data.wine)
 
 model.numeric.col <- unlist(lapply(data.wine, is.numeric))
@@ -240,6 +233,14 @@ data.wine.numeric <- data.wine[, model.numeric.col, with = F]
 str(data.wine.numeric)
 
 getCorTable(data.wine.numeric)
+
+# Correlation matrix
+ggcorrplot(round(cor(data.wine.numeric[, 1:16]), 1),
+           type = "lower",
+           method = "circle",
+           colors = c("tomato2", "white", "springgreen3"),
+           lab_size = 3,
+           title = "Correlogram of Wine Metrics")
 
 ggplot(data = data.wine,
        aes(y = Density, x = Alcohol,
@@ -399,15 +400,6 @@ ggplot(data = data.wine, aes(x = STARS, y = FixedAcidity, group = STARS)) +
                shape = 8,
                size = 4)
 
-ggplot(data = data.nonneg, aes(x = STARS, y = LabelAppeal, group = STARS)) +
-  geom_jitter(alpha = .3) +
-  geom_boxplot(alpha = .5, color = 'blue') +
-  stat_summary(fun.y = "mean",
-               geom = "point",
-               color = "red",
-               shape = 8,
-               size = 4)
-
 ggplot(data = data.wine, aes(x = STARS, y = LabelAppeal, group = STARS)) +
   geom_jitter(alpha = .3) +
   geom_boxplot(alpha = .5, color = 'blue') +
@@ -491,6 +483,42 @@ ggplot(data = data.wine, aes(x = Cases, y = CitricAcid, group = Cases)) +
                shape = 8,
                size = 4)
 
+ggplot(data = data.wine, aes(x = Cases, y = TotalSulfurDioxide, group = Cases)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = data.wine, aes(x = Cases, y = ResidualSugar, group = Cases)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = data.wine, aes(x = Cases, y = Sulphates, group = Cases)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = data.wine, aes(x = Cases, y = AcidIndex, group = Cases)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
 ggplot(data = data.wine, aes(x = Cases, y = Density, group = Cases)) +
   geom_jitter(alpha = .3) +
   geom_boxplot(alpha = .5, color = 'blue') +
@@ -518,6 +546,15 @@ ggplot(data = data.wine, aes(x = Cases, y = STARS, group = Cases)) +
                shape = 8,
                size = 4)
 
+ggplot(data = data.wine, aes(x = Cases, y = Alcohol, group = Cases)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
 ggplot(data = data.wine, aes(x = Cases, y = LabelAppeal, group = Cases)) +
   geom_jitter(alpha = .3) +
   geom_boxplot(alpha = .5, color = 'blue') +
@@ -536,28 +573,115 @@ ggplot(data = data.wine, aes(x = Cases, y = LabelAppeal, group = Cases)) +
 
 data.stars <- data.wine[!is.na(STARS)]
 
+nrow(data.stars) - nrow(data.wine)
+
+n.total.stars <- nrow(data.stars)
+
+data.stars$u <- runif(n = n.total.stars, min = 0, max = 1)
+
+# Create train/test split;
+stars.train <- subset(data.stars, u < 0.70)
+stars.test <- subset(data.stars, u >= 0.70)
+
 # Poisson Distribution
-ggplot(data.wine, aes(STARS, fill = ..count..)) +
-  geom_histogram()
+ggplot(stars.train, aes(STARS, fill = ..count..)) +
+  geom_histogram() +
+  labs(title = "STARS Rating")
 
-ggplot(data.stars, aes(STARS, Alcohol)) +
-  geom_point()
+nrow(stars.train[STARS <= 2]) / nrow(stars.train)
 
-ggplot(data.stars, aes(STARS, Chlorides)) +
-  geom_point()
+dist <- stars.train[, .(Count = .N / nrow(stars.train)), by = STARS]
+dist[, Poisson := dpois(STARS, 1)]
 
-ggplot(data.stars, aes(STARS, CitricAcid)) +
-  geom_point()
+ggplot(dist) +
+  geom_line(aes(STARS, Count, color = "Stars"), lwd = 1.5) +
+  geom_line(aes(STARS, Poisson, color = "Poisson"), lwd = 1.5, linetype = "dashed") +
+  labs(title = "Stars Distribution vs Possion Distribution") +
+  theme(legend.position = "bottom")
 
-ggplot(data.stars, aes(STARS, ResidualSugar)) +
-  geom_point()
+# STARS EDA
 
-summary(data.stars$Alcohol)
+ggplot(data = stars.train, aes(x = STARS, y = FixedAcidity, group = STARS)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
 
-ggplot(data.stars, aes(STARS, Density)) +
-  geom_point()
+ggplot(data = stars.train, aes(x = STARS, y = LabelAppeal, group = STARS)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
 
-skim(data.stars)
+ggplot(data = stars.train, aes(x = STARS, y = VolatileAcidity, group = STARS)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = stars.train, aes(x = STARS, y = ResidualSugar, group = STARS)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = stars.train, aes(x = STARS, y = TotalSulfurDioxide, group = STARS)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = stars.train, aes(x = STARS, y = pH, group = STARS)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = stars.train, aes(x = STARS, y = CitricAcid, group = STARS)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+skim(stars.train)
+
+stars.numeric.col <- unlist(lapply(stars.train, is.numeric))
+stars.wine.numeric <- stars.train[, stars.numeric.col, with = F]
+
+str(stars.wine.numeric)
+
+getCorTable(stars.wine.numeric)
+
+# Correlation matrix
+ggcorrplot(round(cor(stars.wine.numeric[, 1:16]), 1),
+           type = "lower",
+           method = "circle",
+           colors = c("tomato2", "white", "springgreen3"),
+           lab_size = 3,
+           title = "Correlogram of Wine Metrics ~ Stars")
+
 
 #####################################################################
 ### Purchase Decision
