@@ -302,10 +302,12 @@ ggplot(data.complete, aes(x = Alcohol, fill = Quality)) +
 ggplot(data.complete, aes(x = Alcohol, fill = as.factor(STARS))) +
   geom_density(alpha = .3)
 
-# Relationships
+# Alcohol ~ Label
 
 ggplot(data.wine, aes(Alcohol, fill = LabelAppeal, colour = LabelAppeal)) +
   geom_density(alpha = 0.1) + facet_grid(LabelAppeal ~ .)
+
+# STARS
 
 ggplot(data.wine, aes(STARS, CitricAcid, group = STARS, fill = STARS)) +
   geom_boxplot(varwidth = T)
@@ -313,30 +315,36 @@ ggplot(data.wine, aes(STARS, CitricAcid, group = STARS, fill = STARS)) +
 ggplot(data.wine, aes(STARS, Chlorides, group = STARS, fill = STARS)) +
   geom_boxplot(varwidth = T)
 
-ggplot(data.wine, aes(STARS, VolatileAcidity, group = STARS, fill = STARS)) +
-  geom_boxplot(varwidth = T)
-
-ggplot(data.wine, aes(STARS, TotalSulfurDioxide, group = STARS, fill = STARS)) +
+ggplot(data.wine, aes(STARS, FixedAcidity, group = STARS, fill = STARS)) +
   geom_boxplot(varwidth = T)
 
 ggplot(data.wine, aes(STARS, FreeSulfurDioxide, group = STARS, fill = STARS)) +
   geom_boxplot(varwidth = T)
 
+ggplot(data.wine, aes(STARS, ResidualSugar, group = STARS, fill = STARS)) +
+  geom_boxplot(varwidth = T)
+
+ggplot(data.wine, aes(STARS, TotalSulfurDioxide, group = STARS, fill = STARS)) +
+  geom_boxplot(varwidth = T)
+
 ggplot(data.wine, aes(STARS, Sulphates, group = STARS, fill = STARS)) +
   geom_boxplot(varwidth = T)
 
-ggplot(data.wine, aes(STARS, FixedAcidity, group = STARS, fill = STARS)) +
+ggplot(data.wine, aes(STARS, VolatileAcidity, group = STARS, fill = STARS)) +
   geom_boxplot(varwidth = T)
 
-ggplot(data.wine, aes(STARS, ResidualSugar, group = STARS, fill = STARS)) +
+ggplot(data.wine, aes(STARS, pH, group = STARS, fill = STARS)) +
   geom_boxplot(varwidth = T)
 
-ggplot(data.wine, aes(STARS, ResidualSugar, group = STARS, fill = STARS)) +
+ggplot(data.wine, aes(STARS, AcidIndex, group = STARS, fill = STARS)) +
+  geom_boxplot()
+
+ggplot(data.wine, aes(STARS, Density, group = STARS, fill = STARS)) +
   geom_boxplot()
 
 # Quality
 
-ggplot(data = data.nonneg, aes(x = Quality, y = FixedAcidity, group = Quality)) +
+ggplot(data = data.wine, aes(x = Quality, y = FixedAcidity, group = Quality)) +
   geom_jitter(alpha = .3) +
   geom_boxplot(alpha = .5, color = 'blue') +
   geom_smooth(method = "lm") +
