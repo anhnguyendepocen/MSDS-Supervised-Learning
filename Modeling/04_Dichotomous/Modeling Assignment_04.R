@@ -19,6 +19,9 @@ library(MASS)
 library(RColorBrewer)
 library(ggcorrplot)
 library(glmulti)
+library(glmnet)
+library(gbm)
+library(Metrics)
 
 #####################################################################
 #########################   Modeling 4  #############################
@@ -682,6 +685,39 @@ ggcorrplot(round(cor(stars.wine.numeric[, 1:16]), 1),
            lab_size = 3,
            title = "Correlogram of Wine Metrics ~ Stars")
 
+stars.train <- stars.train[complete.cases(stars.train)]
+
+train.stars <- stars.train$STARS
+train.stars.vars <- stars.train[, !c("STARS", "u")]
+
+summary(stars.null <- glm(STARS ~ 1, family = poisson, data = stars.train))
+
+#Backward selection of variables
+backward.stars <- train(x = train.stars.vars,
+                        y = train.stars,
+                        method = "glmStepAIC",
+                        family = poisson,
+                        direction = "backward")
+
+anova(stars.null, backward.stars, test = "Chisq")
+
+#Forward selection of variables
+forward.stars <- train(x = train.stars.vars,
+                       y = train.stars,
+                       method = "glmStepAIC",
+                       family = poisson,
+                       direction = "forward")
+
+anova(stars.null, forward.stars, test = "Chisq")
+
+# Stepwise selection of variables
+stepwise.stars <- train(x = train.stars.vars,
+                       y = train.stars,
+                       method = "glmStepAIC",
+                       family = poisson,
+                       direction = "stepwise")
+
+anova(stars.null, stepwise.stars, test = "Chisq")
 
 #####################################################################
 ### Purchase Decision
