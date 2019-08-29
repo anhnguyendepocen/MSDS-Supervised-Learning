@@ -688,16 +688,29 @@ ggcorrplot(round(cor(stars.wine.numeric[, 1:16]), 1),
 stars.train <- stars.train[complete.cases(stars.train)]
 
 train.stars <- stars.train$STARS
-train.stars.vars <- stars.train[, !c("STARS", "u")]
+train.stars.vars <- stars.train[, !c("STARS", "u", "Quality", "Purchase")] # , "Cases"
 
 summary(stars.null <- glm(STARS ~ 1, family = poisson, data = stars.train))
+
+stars.train.cols <- paste(paste(colnames(train.stars.vars), collapse = " + "))
+
+# Define the upper model as the FULL model
+upper.lm <- glm(paste("STARS ~ ", stars.train.cols), data = stars.train, family = poisson)
+summary(upper.lm)
+
+# Define the lower model as the Intercept model
+lower.lm <- glm(STARS ~ 1, data = stars.train, family = poisson)
+summary(lower.lm)
 
 #Backward selection of variables
 backward.stars <- train(x = train.stars.vars,
                         y = train.stars,
+                        scope = list(upper = formula(upper.lm), lower = ~1),
                         method = "glmStepAIC",
                         family = poisson,
-                        direction = "backward")
+                        direction = c('backward'))
+
+summary(backward.stars)
 
 anova(stars.null, backward.stars, test = "Chisq")
 
@@ -706,7 +719,9 @@ forward.stars <- train(x = train.stars.vars,
                        y = train.stars,
                        method = "glmStepAIC",
                        family = poisson,
-                       direction = "forward")
+                       direction = c('forward'))
+
+summary(forward.stars)
 
 anova(stars.null, forward.stars, test = "Chisq")
 
@@ -715,7 +730,89 @@ stepwise.stars <- train(x = train.stars.vars,
                        y = train.stars,
                        method = "glmStepAIC",
                        family = poisson,
-                       direction = "stepwise")
+                       direction = c('both'))
+
+summary(stepwise.stars)
+
+anova(stars.null, stepwise.stars, test = "Chisq")
+
+stars.m1 <- stars.train[, .(STARS)]
+
+stars.m1$deviation <- resid(stepwise.stars, type = "deviance")
+stars.m1$pred <- predict(stepwise.stars, type = "raw")
+
+p1 <- ggplot(stars.m1, aes(pred, deviation)) +
+  geom_point() +
+  geom_hline(aes(yintercept = 0, col = "red"), lwd = 1) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Deviation vs Fitted") +
+  theme(legend.position = 'none')
+
+p2 <- ggplot(stars.m1, aes(sample = stars.m1$deviation)) +
+  geom_qq() +
+  geom_qq_line()
+
+grid.arrange(p1, p2, nrow = 2)
+
+stars.test.m1 <- stars.test[, .(STARS)]
+stars.test.m1$pred <- round(predict(stepwise.stars, newdata = stars.test, type = "raw"))
+stars.test.m1$accurate <- stars.test$STARS == stars.test$pred
+
+round(sum(stars.test.m1$accurate) / nrow(stars.test.m1) * 100, 1)
+
+p1 <- ggplot(stars.test.m1, aes(STARS, fill = ..count..)) +
+  geom_histogram()
+
+p2 <- ggplot(stars.test.m1, aes(pred, fill = ..count..)) +
+  geom_histogram()
+
+grid.arrange(p1, p2, nrow = 2)
+
+# Holdout Cases variable
+
+train.stars <- stars.train$STARS
+train.stars.vars <- stars.train[, !c("STARS", "u", "Quality", "Purchase", "Cases")]
+
+stars.train.cols <- paste(paste(colnames(train.stars.vars), collapse = " + "))
+
+# Define the upper model as the FULL model
+upper.lm <- glm(paste("STARS ~ ", stars.train.cols), data = stars.train, family = poisson)
+summary(upper.lm)
+
+# Define the lower model as the Intercept model
+lower.lm <- glm(STARS ~ 1, data = stars.train, family = poisson)
+summary(lower.lm)
+#Backward selection of variables
+backward.stars <- train(x = train.stars.vars,
+                        y = train.stars,
+                        scope = list(upper = formula(upper.lm), lower = ~1),
+                        method = "glmStepAIC",
+                        family = poisson,
+                        direction = c('backward'))
+
+summary(backward.stars)
+
+anova(stars.null, backward.stars, test = "Chisq")
+
+#Forward selection of variables
+forward.stars <- train(x = train.stars.vars,
+                       y = train.stars,
+                       method = "glmStepAIC",
+                       family = poisson,
+                       direction = c('forward'))
+
+summary(forward.stars)
+
+anova(stars.null, forward.stars, test = "Chisq")
+
+# Stepwise selection of variables
+stepwise.stars <- train(x = train.stars.vars,
+                       y = train.stars,
+                       method = "glmStepAIC",
+                       family = poisson,
+                       direction = c('both'))
+
+summary(stepwise.stars)
 
 anova(stars.null, stepwise.stars, test = "Chisq")
 
