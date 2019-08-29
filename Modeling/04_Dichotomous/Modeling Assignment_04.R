@@ -782,6 +782,7 @@ summary(upper.lm)
 # Define the lower model as the Intercept model
 lower.lm <- glm(STARS ~ 1, data = stars.train, family = poisson)
 summary(lower.lm)
+
 #Backward selection of variables
 backward.stars <- train(x = train.stars.vars,
                         y = train.stars,
