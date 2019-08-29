@@ -738,8 +738,8 @@ anova(stars.null, stepwise.stars, test = "Chisq")
 
 stars.m1 <- stars.train[, .(STARS)]
 
-stars.m1$deviation <- resid(stepwise.stars, type = "deviance")
-stars.m1$pred <- predict(stepwise.stars, type = "raw")
+stars.m1$deviation <- resid(backward.stars, type = "deviance")
+stars.m1$pred <- predict(backward.stars, type = "raw")
 
 p1 <- ggplot(stars.m1, aes(pred, deviation)) +
   geom_point() +
@@ -755,10 +755,17 @@ p2 <- ggplot(stars.m1, aes(sample = stars.m1$deviation)) +
 grid.arrange(p1, p2, nrow = 2)
 
 stars.test.m1 <- stars.test[, .(STARS)]
-stars.test.m1$pred <- round(predict(stepwise.stars, newdata = stars.test, type = "raw"))
-stars.test.m1$accurate <- stars.test$STARS == stars.test$pred
+stars.test.m1$pred <- round(predict(backward.stars, newdata = stars.test, type = "raw"))
+stars.test.m1$accurate <- stars.test.m1$STARS == stars.test.m1$pred
 
 round(sum(stars.test.m1$accurate) / nrow(stars.test.m1) * 100, 1)
+
+m1.results <- stars.test.m1[, .(PctAccurate = (sum(accurate) / .N) * 100), by = STARS]
+setorder(m1.results, STARS)
+m1.results
+
+formattable(m1.results, align = c("l", "r"),
+  list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))))
 
 p1 <- ggplot(stars.test.m1, aes(STARS, fill = ..count..)) +
   geom_histogram()
@@ -816,6 +823,93 @@ stepwise.stars <- train(x = train.stars.vars,
 summary(stepwise.stars)
 
 anova(stars.null, stepwise.stars, test = "Chisq")
+
+data.table(Method = "Forward", AIC = forward.stars) 
+
+stars.m2 <- stars.train[, .(STARS)]
+
+stars.m2$deviation <- resid(stepwise.stars, type = "deviance")
+stars.m2$pred <- round(predict(stepwise.stars, type = "raw"), 0)
+
+p1 <- ggplot(stars.m2, aes(pred, deviation)) +
+  geom_point() +
+  geom_hline(aes(yintercept = 0, col = "red"), lwd = 1) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Deviation vs Fitted") +
+  theme(legend.position = 'none')
+
+p2 <- ggplot(stars.m2, aes(sample = stars.m2$deviation)) +
+  geom_qq() +
+  geom_qq_line()
+
+grid.arrange(p1, p2, nrow = 2)
+
+stars.test.m2 <- stars.test[, .(STARS)]
+stars.test.m2$pred <- round(predict(stepwise.stars, newdata = stars.test, type = "raw"))
+stars.test.m2$accurate <- stars.test.m2$STARS == stars.test.m2$pred
+
+round(sum(stars.test.m2$accurate) / nrow(stars.test.m2) * 100, 1)
+
+m2.results <- stars.test.m2[, .(PctAccurate = (sum(accurate) / .N) * 100), by = STARS]
+setorder(m2.results, STARS)
+m2.results
+
+formattable(m2.results, align = c("l", "r"),
+  list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))))
+
+p1 <- ggplot(stars.test.m2, aes(STARS, fill = ..count..)) +
+  geom_histogram()
+
+p2 <- ggplot(stars.test.m2, aes(pred, fill = ..count..)) +
+  geom_histogram()
+
+grid.arrange(p1, p2, nrow = 2)
+
+# Final Model
+
+summary(m3 <- glm(STARS ~ Cases + Alcohol + LabelAppeal + AcidIndex, data = stars.train, family = poisson))
+
+AIC(m3)
+
+stars.m3 <- stars.train[, .(STARS)]
+
+stars.m3$deviation <- resid(m3, type = "deviance")
+stars.m3$pred <- predict(m3, type = "response")
+
+p1 <- ggplot(stars.m3, aes(pred, deviation)) +
+  geom_point() +
+  geom_hline(aes(yintercept = 0, col = "red"), lwd = 1) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Deviation vs Fitted") +
+  theme(legend.position = 'none')
+
+p2 <- ggplot(stars.m3, aes(sample = stars.m3$deviation)) +
+  geom_qq() +
+  geom_qq_line()
+
+grid.arrange(p1, p2, nrow = 2)
+
+stars.test.m3 <- stars.test[, .(STARS)]
+stars.test.m3$pred <- round(predict(m3, newdata = stars.test, type = "response"))
+stars.test.m3$accurate <- stars.test.m3$STARS == stars.test.m3$pred
+
+round(sum(stars.test.m3$accurate) / nrow(stars.test.m3) * 100, 1)
+
+m3.results <- stars.test.m3[, .(PctAccurate = (sum(accurate) / .N) * 100), by = STARS]
+setorder(m3.results, STARS)
+m3.results
+
+formattable(m3.results, align = c("l", "r"),
+  list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))))
+
+
+p1 <- ggplot(stars.test.m3, aes(STARS, fill = ..count..)) +
+  geom_histogram()
+
+p2 <- ggplot(stars.test.m3, aes(pred, fill = ..count..)) +
+  geom_histogram()
+
+grid.arrange(p1, p2, nrow = 2)
 
 #####################################################################
 ### Purchase Decision
