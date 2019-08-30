@@ -914,10 +914,222 @@ grid.arrange(p1, p2, nrow = 2)
 #####################################################################
 ### Purchase Decision
 
+data.purchase <- data.wine[!is.na(Purchase)]
+
+nrow(data.purchase) - nrow(data.purchase)
+
+n.total.purchase <- nrow(data.purchase)
+
+data.purchase$u <- runif(n = n.total.purchase, min = 0, max = 1)
+
+# Create train/test split;
+purchase.train <- subset(data.stars, u < 0.70)
+purchase.test <- subset(data.stars, u >= 0.70)
+
 # Logistic Regression
-ggplot(data.wine, aes(Purchase, fill = ..count..)) +
+ggplot(purchase.test, aes(Purchase, fill = ..count..)) +
+  geom_histogram() +
+  labs(title = "Purchase Decisions")
+
+dist <- purchase.train[, .(Count = .N / nrow(purchase.train)), by = Purchase]
+dist[, Poisson := dbinom(Purchase, .07)]
+
+ggplot(dist) +
+  geom_line(aes(STARS, Count, color = "Stars"), lwd = 1.5) +
+  geom_line(aes(STARS, Poisson, color = "Poisson"), lwd = 1.5, linetype = "dashed") +
+  labs(title = "Stars Distribution vs Possion Distribution") +
+  theme(legend.position = "bottom")
+
+# Purchase EDA
+
+ggplot(data = purchase.train, aes(x = Purchase, y = FixedAcidity, group = Purchase)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = purchase.train, aes(x = Purchase, y = VolatileAcidity, group = Purchase)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = purchase.train, aes(x = Purchase, y = VolatileAcidity, group = Purchase)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = purchase.train, aes(x = Purchase, y = ResidualSugar, group = Purchase)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = purchase.train, aes(x = Purchase, y = TotalSulfurDioxide, group = Purchase)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = purchase.train, aes(x = Purchase, y = pH, group = Purchase)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = purchase.train, aes(x = Purchase, y = CitricAcid, group = Purchase)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = purchase.train, aes(x = Purchase, y = LabelAppeal, group = Purchase)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = purchase.train, aes(x = Purchase, y = STARS, group = Purchase)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+skim(purchase.train)
+
+purchase.numeric.col <- unlist(lapply(purchase.train, is.numeric))
+purchase.wine.numeric <- stars.train[, stars.numeric.col, with = F]
+
+str(purchase.wine.numeric)
+
+# Correlation matrix
+ggcorrplot(round(cor(purchase.wine.numeric[, 1:16]), 1),
+           type = "lower",
+           method = "circle",
+           colors = c("tomato2", "white", "springgreen3"),
+           lab_size = 3,
+           title = "Correlogram of Wine Metrics ~ Purchase")
+
+purchase.train <- purchase.train[complete.cases(purchase.train)]
+
+train.purchase <- as.factor(purchase.train$Purchase)
+train.purchase.vars <- purchase.train[, !c("u", "Quality", "Purchase", "Cases")]
+
+summary(purchase.null <- glm(Purchase ~ 1, family = binomial, data = purchase.train))
+
+purchase.train.cols <- paste(paste(colnames(train.purchase.vars), collapse = " + "))
+
+# Define the upper model as the FULL model
+upper.lm <- glm(paste("Purchase ~ ", purchase.train.cols), data = purchase.train, family = binomial)
+summary(upper.lm)
+
+# Define the lower model as the Intercept model
+lower.lm <- glm(Purchase ~ 1, data = purchase.train, family = binomial)
+summary(lower.lm)
+
+#Backward selection of variables
+backward.purchase <- train(x = train.purchase.vars,
+                        y = train.purchase,
+                        scope = list(upper = formula(upper.lm), lower = ~1),
+                        method = "glmStepAIC",
+                        family = binomial,
+                        direction = c('backward'))
+
+summary(backward.purchase)
+
+#Forward selection of variables
+forward.purchase <- train(x = train.purchase.vars,
+                       y = train.purchase,
+                       method = "glmStepAIC",
+                       family = binomial,
+                       direction = c('forward'))
+
+summary(forward.purchase)
+
+# Stepwise selection of variables
+stepwise.purchase <- train(x = train.purchase.vars,
+                       y = train.purchase,
+                       method = "glmStepAIC",
+                       family = binomial,
+                       direction = c('both'))
+
+summary(stepwise.purchase)
+
+purchase.m1 <- purchase.train[, .(Purchase)]
+
+purchase.m1$deviation <- resid(stepwise.purchase, type = "deviance")
+purchase.m1$pred <- predict(stepwise.purchase, type = "raw")
+
+p1 <- ggplot(purchase.m1, aes(pred, deviation)) +
+  geom_point() +
+  geom_hline(aes(yintercept = 0, col = "red"), lwd = 1) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Deviation vs Fitted") +
+  theme(legend.position = 'none')
+
+p2 <- ggplot(stars.m1, aes(sample = purchase.m1$deviation)) +
+  geom_qq() +
+  geom_qq_line()
+
+grid.arrange(p1, p2, nrow = 2)
+
+purchase.test.m1 <- stars.test[, .(STARS)]
+purchase.test.m1$pred <- round(predict(backward.stars, newdata = stars.test, type = "raw"))
+purchase.test.m1$accurate <- stars.test.m1$STARS == stars.test.m1$pred
+
+round(sum(purchase.test.m1$accurate) / nrow(purchase.test.m1) * 100, 1)
+
+m1.results <- stars.test.m1[, .(PctAccurate = (sum(accurate) / .N) * 100), by = STARS]
+setorder(m1.results, STARS)
+m1.results
+
+formattable(m1.results, align = c("l", "r"),
+  list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))))
+
+p1 <- ggplot(stars.test.m1, aes(STARS, fill = ..count..)) +
   geom_histogram()
 
+p2 <- ggplot(stars.test.m1, aes(pred, fill = ..count..)) +
+  geom_histogram()
+
+grid.arrange(p1, p2, nrow = 2)
 
 #####################################################################
 ### Number of Cases Sold
