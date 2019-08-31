@@ -931,11 +931,11 @@ ggplot(purchase.test, aes(Purchase, fill = ..count..)) +
   labs(title = "Purchase Decisions")
 
 dist <- purchase.train[, .(Count = .N / nrow(purchase.train)), by = Purchase]
-dist[, Poisson := dbinom(Purchase, .07)]
+dist[, Poisson := dbinom(Purchase, size = n.total.purchase, prob = 1 - .07)]
 
 ggplot(dist) +
-  geom_line(aes(STARS, Count, color = "Stars"), lwd = 1.5) +
-  geom_line(aes(STARS, Poisson, color = "Poisson"), lwd = 1.5, linetype = "dashed") +
+  geom_line(aes(Purchase, Count, color = "Purchase"), lwd = 1.5) +
+  geom_line(aes(Purchase, Poisson, color = "Binomial"), lwd = 1.5, linetype = "dashed") +
   labs(title = "Stars Distribution vs Possion Distribution") +
   theme(legend.position = "bottom")
 
@@ -1011,7 +1011,7 @@ ggplot(data = purchase.train, aes(x = Purchase, y = CitricAcid, group = Purchase
                shape = 8,
                size = 4)
 
-ggplot(data = purchase.train, aes(x = Purchase, y = LabelAppeal, group = Purchase)) +
+ggplot(data = purchase.train, aes(x = LabelAppeal, y = Purchase, group = LabelAppeal)) +
   geom_jitter(alpha = .3) +
   geom_boxplot(alpha = .5, color = 'blue') +
   geom_smooth(method = "lm") +
@@ -1021,7 +1021,7 @@ ggplot(data = purchase.train, aes(x = Purchase, y = LabelAppeal, group = Purchas
                shape = 8,
                size = 4)
 
-ggplot(data = purchase.train, aes(x = Purchase, y = STARS, group = Purchase)) +
+ggplot(data = purchase.train, aes(x = STARS, y = Purchase, group = STARS)) +
   geom_jitter(alpha = .3) +
   geom_boxplot(alpha = .5, color = 'blue') +
   geom_smooth(method = "lm") +
@@ -1069,7 +1069,8 @@ backward.purchase <- train(x = train.purchase.vars,
                         scope = list(upper = formula(upper.lm), lower = ~1),
                         method = "glmStepAIC",
                         family = binomial,
-                        direction = c('backward'))
+                        direction = c('backward'),
+                        trace = F)
 
 summary(backward.purchase)
 
@@ -1078,7 +1079,8 @@ forward.purchase <- train(x = train.purchase.vars,
                        y = train.purchase,
                        method = "glmStepAIC",
                        family = binomial,
-                       direction = c('forward'))
+                       direction = c('forward'),
+                       trace = F)
 
 summary(forward.purchase)
 
@@ -1087,14 +1089,83 @@ stepwise.purchase <- train(x = train.purchase.vars,
                        y = train.purchase,
                        method = "glmStepAIC",
                        family = binomial,
-                       direction = c('both'))
+                       direction = c('both'),
+                       trace = F)
 
 summary(stepwise.purchase)
 
+
+# Model summary functions
+
+log_fit <- function(name, fit) {
+  return(data.table(Model = name, AIC = AIC(fit), BIC = BIC(fit)))
+}
+
+logit2prob <- function(logit) {
+  odds <- exp(logit)
+  prob <- round(odds / (1 + odds), 3)
+
+  return(prob)
+}
+
+model.summary <- rbind(log_fit("Forward Selection", backward.purchase$finalModel),
+                      log_fit("Backward Selection", forward.purchase$finalModel),
+                      log_fit("Stepwise Selection", stepwise.purchase$finalModel))
+
+formattable(model.summary, align = c("l", "c", "r"),
+    list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+))
+
+summary(stepwise.purchase$finalModel)
+
+round(coef(stepwise.purchase$finalModel), 3)
+
+b0 <- coef(stepwise.purchase$finalModel)[1]
+b0_logit <- exp(b0)
+round((b0_logit / (1 + b0_logit)), 3) * 100 # convert to probability
+
+X1 <- coef(stepwise.purchase$finalModel)[2]
+X1_logit <- exp(X1)
+round((X1_logit - 1) * 100, 2)
+round(X1_logit / (1 + X1_logit), 3) * 100 # convert to probability
+
+X2 <- coef(stepwise.purchase$finalModel)[3]
+X2_logit <- exp(X2)
+round((X2_logit - 1) * 100, 2)
+round(X2_logit / (1 + X2_logit), 3) * 100 # convert to probability
+
+X3 <- coef(stepwise.purchase$finalModel)[4]
+X3_logit <- exp(X3)
+round((X3_logit - 1) * 100, 2)
+round(X3_logit / (1 + X3_logit), 3) * 100 # convert to probability
+
+X4 <- coef(stepwise.purchase$finalModel)[5]
+X4_logit <- exp(X4)
+round((X4_logit - 1) * 100, 2)
+round(X4_logit / (1 + X4_logit), 3) * 100 # convert to probability
+
+X5 <- coef(stepwise.purchase$finalModel)[6]
+X5_logit <- exp(X5)
+round((X5_logit - 1) * 100, 2)
+round(X5_logit / (1 + X5_logit), 3) * 100 # convert to probability
+
+X6 <- coef(stepwise.purchase$finalModel)[7]
+X6_logit <- exp(X6)
+round((X6_logit - 1) * 100, 2)
+round(X6_logit / (1 + X6_logit), 3) * 100 # convert to probability
+
+X7 <- coef(stepwise.purchase$finalModel)[8]
+X7_logit <- exp(X7)
+round((X7_logit - 1) * 100, 2)
+round(X7_logit / (1 + X7_logit), 3) * 100 # convert to probability
+
+#####################################################################
+### Evaluation
+
 purchase.m1 <- purchase.train[, .(Purchase)]
 
-purchase.m1$deviation <- resid(stepwise.purchase, type = "deviance")
-purchase.m1$pred <- predict(stepwise.purchase, type = "raw")
+purchase.m1$deviation <- resid(stepwise.purchase$finalModel, type = "deviance")
+purchase.m1$pred <- predict(stepwise.purchase$finalModel, type = "response")
 
 p1 <- ggplot(purchase.m1, aes(pred, deviation)) +
   geom_point() +
@@ -1103,32 +1174,53 @@ p1 <- ggplot(purchase.m1, aes(pred, deviation)) +
   labs(title = "Deviation vs Fitted") +
   theme(legend.position = 'none')
 
-p2 <- ggplot(stars.m1, aes(sample = purchase.m1$deviation)) +
+p2 <- ggplot(purchase.m1, aes(sample = purchase.m1$deviation)) +
   geom_qq() +
   geom_qq_line()
 
 grid.arrange(p1, p2, nrow = 2)
 
-purchase.test.m1 <- stars.test[, .(STARS)]
-purchase.test.m1$pred <- round(predict(backward.stars, newdata = stars.test, type = "raw"))
-purchase.test.m1$accurate <- stars.test.m1$STARS == stars.test.m1$pred
+purchase.test.m1 <- purchase.test[, .(Purchase, STARS)]
+purchase.test.m1$pred <- ifelse( predict(stepwise.purchase$finalModel, newdata = purchase.test, type = "response") > .5, 1, 0 )
+purchase.test.m1 <- purchase.test.m1[!is.na(pred)]
+
+purchase.test.m1$accurate <- purchase.test.m1$Purchase == purchase.test.m1$pred
 
 round(sum(purchase.test.m1$accurate) / nrow(purchase.test.m1) * 100, 1)
 
-m1.results <- stars.test.m1[, .(PctAccurate = (sum(accurate) / .N) * 100), by = STARS]
+m1.results <- purchase.test.m1[, .(PctAccurate = (sum(accurate) / .N) * 100), by = Purchase]
+m1.results$PctAccurate <- round(m1.results$PctAccurate, 3)
+setorder(m1.results, Purchase)
+m1.results
+
+formattable(m1.results, align = c("l", "r"),
+  list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))))
+
+m1.results <- purchase.test.m1[, .(PctAccurate = (sum(accurate) / .N) * 100), by = STARS]
+m1.results$PctAccurate <- round(m1.results$PctAccurate, 3)
 setorder(m1.results, STARS)
 m1.results
 
 formattable(m1.results, align = c("l", "r"),
   list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))))
 
-p1 <- ggplot(stars.test.m1, aes(STARS, fill = ..count..)) +
-  geom_histogram()
+coef(stepwise.purchase$finalModel)
 
-p2 <- ggplot(stars.test.m1, aes(pred, fill = ..count..)) +
-  geom_histogram()
+X2_val <- mean(purchase.test$VolatileAcidity, na.rm = T)
+X3_val <- mean(purchase.test$ResidualSugar, na.rm = T)
+X4_val <- mean(purchase.test$TotalSulfurDioxide, na.rm = T)
+X5_val <- mean(purchase.test$Alcohol, na.rm = T)
+X6_val <- mean(purchase.test$LabelAppeal, na.rm = T)
+X7_val <- mean(purchase.test$AcidIndex, na.rm = T)
 
-grid.arrange(p1, p2, nrow = 2)
+logits <- b0 + X1 * purchase.test$STARS + X2 * X2_val + X3 + X3 * X3_val + X4 * X4_val + X5 * X5_val + X6 * X6_val + X7 * X7_val
+
+purchase.test[, pi := exp(logits) / (1 + exp(logits))]
+
+ggplot(purchase.test, aes(STARS, pi)) +
+  geom_point() +
+  geom_line() +
+  labs(x = "STARS", y = "P(outcome)", title = "Probability of Purchase Decision by Stars Rating")
 
 #####################################################################
 ### Number of Cases Sold
