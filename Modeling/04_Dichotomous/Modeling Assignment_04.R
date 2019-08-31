@@ -902,7 +902,6 @@ m3.results
 formattable(m3.results, align = c("l", "r"),
   list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))))
 
-
 p1 <- ggplot(stars.test.m3, aes(STARS, fill = ..count..)) +
   geom_histogram()
 
