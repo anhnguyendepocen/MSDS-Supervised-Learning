@@ -22,6 +22,7 @@ library(glmulti)
 library(glmnet)
 library(gbm)
 library(Metrics)
+library(pscl)
 
 #####################################################################
 #########################   Modeling 4  #############################
@@ -1227,5 +1228,203 @@ ggplot(purchase.test, aes(STARS, pi)) +
 
 # Zero Inflated Binomial (ZIP)
 
-ggplot(data.wine, aes(Cases, fill = ..count..)) +
+data.cases <- data.wine[!is.na(Cases)]
+
+nrow(data.cases) - nrow(data.wine)
+
+n.total.cases <- nrow(data.cases)
+
+data.cases$u <- runif(n = n.total.purchase, min = 0, max = 1)
+
+# Create train/test split;
+cases.train <- subset(data.stars, u < 0.70)
+cases.test <- subset(data.stars, u >= 0.70)
+
+# Zero Inflated Binomial (ZIP)
+ggplot(data.cases, aes(Cases, fill = ..count..)) +
+  geom_histogram() +
+  labs(title = "Cases Distribution")
+
+skim(cases.train)
+
+purchase.numeric.col <- unlist(lapply(cases.train, is.numeric))
+purchase.cases.numeric <- stars.train[, purchase.numeric.col, with = F]
+
+str(purchase.cases.numeric)
+
+# Correlation matrix
+ggcorrplot(round(cor(purchase.cases.numeric[, 1:16]), 1),
+           type = "lower",
+           method = "circle",
+           colors = c("tomato2", "white", "springgreen3"),
+           lab_size = 3,
+           title = "Correlogram of Wine Metrics ~ Cases")
+
+cases.train <- purchase.train[complete.cases(purchase.train)]
+
+train.cases <- as.factor(purchase.train$Purchase)
+train.purchase.vars <- purchase.train[, !c("u", "Quality", "Purchase", "Cases")]
+
+ggplot(data = cases.train, aes(x = Cases, y = VolatileAcidity, group = Cases)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = cases.train, aes(x = Cases, y = ResidualSugar, group = Cases)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = cases.train, aes(x = Cases, y = TotalSulfurDioxide, group = Cases)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = cases.train, aes(x = Cases, y = Alcohol, group = Cases)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = cases.train, aes(x = Cases, y = LabelAppeal, group = Cases)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+ggplot(data = cases.train, aes(x = Cases, y = STARS, group = Cases)) +
+  geom_jitter(alpha = .3) +
+  geom_boxplot(alpha = .5, color = 'blue') +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+
+ggplot(data = cases.train, aes(x = Cases, y = STARS, group = Cases)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "red",
+               shape = 8,
+               size = 4)
+
+summary(cases.train)
+
+summary(stepwise.purchase)
+
+summary(base.zero <- zeroinfl(Cases ~ STARS + VolatileAcidity + ResidualSugar + TotalSulfurDioxide + Alcohol + LabelAppeal + AcidIndex, data = cases.train))
+
+summary(zero1 <- zeroinfl(Cases ~ STARS + Alcohol + LabelAppeal + AcidIndex, dist = "poisson", data = cases.train))
+
+round(coef(zero1), 3)
+
+exp(coef(zero1)[7])
+
+b0 <- coef(zero1)[1]
+b0_logit <- exp(b0)
+round((b0_logit - 1) * 100, 2)
+round((b0_logit / (1 + b0_logit)), 3) * 100 # convert to probability
+
+X1 <- coef(zero1)[2]
+X1_logit <- exp(X1)
+round((X1_logit - 1) * 100, 2)
+round(X1_logit / (1 + X1_logit), 3) * 100 # convert to probability
+
+X2 <- coef(zero1)[3]
+X2_logit <- exp(X2)
+round((X2_logit - 1) * 100, 2)
+round(X2_logit / (1 + X2_logit), 3) * 100 # convert to probability
+
+X3 <- coef(zero1)[4]
+X3_logit <- exp(X3)
+round((X3_logit - 1) * 100, 2)
+round(X3_logit / (1 + X3_logit), 3) * 100 # convert to probability
+
+X4 <- coef(zero1)[5]
+X4_logit <- exp(X4)
+round((X4_logit - 1) * 100, 2)
+round(X4_logit / (1 + X4_logit), 3) * 100 # convert to probability
+
+b6 <- coef(zero1)[6]
+b6_logit <- exp(b6)
+round((b6_logit - 1) * 100, 2)
+round((b6_logit / (1 + b6_logit)), 3) * 100 # convert to probability
+
+b7 <- coef(zero1)[7]
+b7_logit <- exp(b7)
+round((b7_logit - 1) * 100, 2)
+round(b7_logit / (1 + b7_logit), 3) * 100 # convert to probability
+
+b8 <- coef(zero1)[8]
+b8_logit <- exp(b8)
+round((b8_logit - 1) * 100, 2)
+round(b8_logit / (1 + b8_logit), 3) * 100 # convert to probability
+
+b9 <- coef(zero1)[9]
+b9_logit <- exp(b9)
+round((b9_logit - 1) * 100, 2)
+round(b9_logit / (1 + b9_logit), 3) * 100 # convert to probability
+
+b10 <- coef(zero1)[10]
+v10_logit <- exp(b10)
+round((v10_logit - 1) * 100, 2)
+round(v10_logit / (1 + v10_logit), 3) * 100 # convert to probability
+
+cases.train$pred <- round(predict(zero1, type = "response"))
+cases.train$residual <- resid(zero1, type = "response")
+
+ggplot(cases.train, aes(pred, Cases)) +
+  geom_point() +
+  geom_hline(aes(yintercept = 0, col = "red"), lwd = 1) +
+   geom_smooth(method = "glm", method.args = list(family = "poisson"), se = TRUE) +
+   labs(title = "Predicted vs Actual") +
+   theme(legend.position = 'none')
+
+p1 <- ggplot(cases.train, aes(sample = pred)) +
+  geom_qq() +
+  geom_qq_line()
+
+p2 <- ggplot(cases.train, aes(residual, fill = ..count..)) +
   geom_histogram()
+
+grid.arrange(p1, p2, nrow = 2)
+
+zero1.data <- cases.test
+zero1.data$pred <- round(predict(zero1, newdata = zero1.data, type = "response"))
+zero1.data$accurate <- zero1.data$Cases == zero1.data$pred
+
+sum(zero1.data$accurate) / nrow(zero1.data)
+
+ggplot(zero1.data, aes(pred, Cases)) +
+  geom_point() +
+  geom_hline(aes(yintercept = 0, col = "red"), lwd = 1) +
+   geom_smooth(method = "glm", method.args = list(family = "poisson"), se = TRUE) +
+   labs(title = "Predicted vs Actual") +
+   theme(legend.position = 'none')

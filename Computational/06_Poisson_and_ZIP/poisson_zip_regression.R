@@ -365,5 +365,4 @@ AIC(zero1)
 
 AIC(zero2)
 
-
 vuong(zero1, zero2)
