@@ -20,6 +20,7 @@ library(WVPlots)
 library(MASS)
 library(Metrics)
 library(stringr)
+library(Rtsne)
 
 #####################################################################
 ######################### Modeling 3 ################################
@@ -109,29 +110,29 @@ data.clean.stats$id <- seq_along(data.clean.stats$Records)
 # Get all factor columns in the data
 
 getCategoryRelationships <- function(data, response) {
-
+  
   catCols <- names(data)[sapply(data, is.factor)]
   print(length(catCols))
-
+  
   results <- data.table( Column = character(), RSq = numeric(), RSE = numeric(), MeanDiff = numeric(), Levels = numeric(), PctPopulated = numeric())
-
+  
   for (col in catCols) {
-
+    
     tryCatch({
       fmla <- as.formula(paste0(response, " ~ ", col))
       fit <- lm(fmla, data)
       pct_value <- round((1 - sum(is.na(data[[col]])) / nrow(data)) * 100, 1)
       vals <- data.table(value = tapply(data.model[[response]], data.model[[col]], mean))
       mean.diff <- mean(vals[!is.na(value)]$value)
-
+      
       ret <- data.table(Column = col, RSq = round(summary(fit)$r.squared * 100, 2), RSE = dollar(sd(residuals(fit))), MeanDiff = dollar(mean.diff), Levels = length(coef(fit)), PctPopulated = pct_value)
-  
+      
       results <- rbind(results, ret, use.names = T)
     }, error = function(e) {
       print(e)
     })
   }
-
+  
   setorder(results, - RSq, RSE, PctPopulated, MeanDiff)
   results
 }
@@ -139,22 +140,22 @@ getCategoryRelationships <- function(data, response) {
 cat.relationships <- getCategoryRelationships(data.model, "SalePrice")
 
 formattable(cat.relationships, align = c("l", "c", "c", "c", "c", "r"),
-  list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
-))
+            list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+            ))
 
 category_model <- function(col, data, response) {
-
+  
   data <- data.model[, SalePrice, by = c(col)]
   print(summary(data))
-
+  
   fmla <- as.formula(paste0(response, " ~ ", col))
   category <- dummyVars(fmla, data = data)
-
+  
   model_fit <- lm(category, data = data)
   
   print(summary(model_fit))
   print(Anova(model_fit, type = "II"))
-
+  
   plot_model(model_fit, type = "pred")
 }
 
@@ -169,8 +170,8 @@ neighborhood.mean <- neighborhood.mean[!is.na(neighborhood.mean$MeanPrice),]
 neighborhood.mean$MeanPrice <- dollar(neighborhood.mean$MeanPrice)
 
 formattable(neighborhood.mean, align = c("l", "r"),
-  list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
-))
+            list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+            ))
 
 ggplot(data.model) +
   geom_boxplot(aes(x = Neighborhood, y = SalePrice, fill = Neighborhood)) +
@@ -267,8 +268,8 @@ tbl.count <- data.table(Total = n.total, Train = n.train, Test = n.test)
 
 getDataSplit <- function( cnt ) {
   formattable(cnt, align = c("l", "c", "r"),
-    list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
-  ))
+              list(`Indicator Name` = formatter("span", style = ~style(color = "grey", font.weight = "bold"))
+              ))
 }
 
 # getDataSplit(tbl.count)
@@ -318,7 +319,7 @@ cbind.fill <- function(...) {
   nm <- lapply(nm, as.matrix)
   n <- max(sapply(nm, nrow))
   do.call(cbind, lapply(nm, function(x)
-        rbind(x, matrix(, n - nrow(x), ncol(x)))))
+    rbind(x, matrix(, n - nrow(x), ncol(x)))))
 }
 
 vif.fwd <- vif(forward.lm)
